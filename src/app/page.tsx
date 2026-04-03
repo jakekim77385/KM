@@ -4,17 +4,19 @@ import { useState, useEffect } from 'react';
 import Dashboard from '@/components/Dashboard';
 import Profile from '@/components/Profile';
 import CollegeList from '@/components/CollegeList';
+import KoreanColleges from '@/components/KoreanColleges';
 import Timeline from '@/components/Timeline';
 import EssayManager from '@/components/EssayManager';
 import ApplicationTracker from '@/components/ApplicationTracker';
 import Financial from '@/components/Financial';
 
-type PageKey = 'dashboard' | 'profile' | 'colleges' | 'timeline' | 'essays' | 'tracker' | 'financial';
+type PageKey = 'dashboard' | 'profile' | 'colleges' | 'korean' | 'timeline' | 'essays' | 'tracker' | 'financial';
 
 const navItems = [
   { key: 'dashboard' as PageKey, icon: '🏠', label: '홈 대시보드', section: 'MAIN' },
   { key: 'profile' as PageKey, icon: '👩‍🎓', label: '내 프로필', section: 'ACADEMICS' },
-  { key: 'colleges' as PageKey, icon: '🏛️', label: '대학 리스트', section: 'ACADEMICS' },
+  { key: 'colleges' as PageKey, icon: '🏛️', label: '미국 대학 리스트', section: 'ACADEMICS' },
+  { key: 'korean' as PageKey, icon: '🇰🇷', label: '한국 특례 (의대)', section: 'ACADEMICS' },
   { key: 'timeline' as PageKey, icon: '📅', label: '타임라인', section: 'PLANNING' },
   { key: 'essays' as PageKey, icon: '✍️', label: '에세이 매니저', section: 'PLANNING' },
   { key: 'tracker' as PageKey, icon: '📊', label: '지원 현황', section: 'PLANNING' },
@@ -31,11 +33,12 @@ const sectionLabels: Record<string, string> = {
 
 const pageTitles: Record<PageKey, { title: string; subtitle: string }> = {
   dashboard: { title: '🏠 대시보드', subtitle: '꾸미의 대학 진학 여정 한눈에 보기' },
-  profile: { title: '👩‍🎓 내 프로필', subtitle: 'Kim Jiyun · Balboa Academy · 11th Grade' },
-  colleges: { title: '🏛️ 대학 리스트', subtitle: '관심 대학 분류 및 리서치' },
-  timeline: { title: '📅 타임라인', subtitle: '2025 ~ 2027 입시 로드맵' },
-  essays: { title: '✍️ 에세이 매니저', subtitle: 'Common App & Supplemental Essays' },
-  tracker: { title: '📊 지원 현황 트래커', subtitle: '학교별 지원 상태 및 서류 체크' },
+  profile:   { title: '👩‍🎓 내 프로필', subtitle: 'Kim Jiyun · Balboa Academy · 11th Grade' },
+  colleges:  { title: '🏛️ 미국 대학 리스트', subtitle: 'BS/MD 직행 + STEM Pre-Med 관심 대학' },
+  korean:    { title: '🇰🇷 한국 특례 입시', subtitle: '재외국민 특별전형 3년 특례 — 의대 / 이공계' },
+  timeline:  { title: '📅 타임라인', subtitle: '2025 ~ 2027 입시 로드맵' },
+  essays:    { title: '✍️ 에세이 매니저', subtitle: 'Common App & Supplemental Essays' },
+  tracker:   { title: '📊 지원 현황 트래커', subtitle: '학교별 지원 상태 및 서류 체크' },
   financial: { title: '💰 재정 & 장학금', subtitle: '학비 비교 및 장학금 정보' },
 };
 
@@ -59,13 +62,14 @@ export default function Home() {
   const renderPage = () => {
     switch (activePage) {
       case 'dashboard': return <Dashboard onNavigate={setActivePage} />;
-      case 'profile': return <Profile />;
-      case 'colleges': return <CollegeList />;
-      case 'timeline': return <Timeline />;
-      case 'essays': return <EssayManager />;
-      case 'tracker': return <ApplicationTracker />;
+      case 'profile':   return <Profile />;
+      case 'colleges':  return <CollegeList />;
+      case 'korean':    return <KoreanColleges />;
+      case 'timeline':  return <Timeline />;
+      case 'essays':    return <EssayManager />;
+      case 'tracker':   return <ApplicationTracker />;
       case 'financial': return <Financial />;
-      default: return <Dashboard onNavigate={setActivePage} />;
+      default:          return <Dashboard onNavigate={setActivePage} />;
     }
   };
 
