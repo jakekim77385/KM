@@ -10,6 +10,19 @@ type Category = 'bsmd' | 'stem';
 type Tier = 'dream' | 'reach' | 'match' | 'safety';
 type AidPolicy = 'need-blind' | 'need-aware' | 'merit' | 'full-pay';
 
+// 꾸미 현재 스펙
+const KUMMI = { sat: 1570, gpa: 4.0, grade: 11 } as const;
+
+type KummiAnalysis = {
+  chancePercent: number;    // 꾸미 합격 가능성 추정 %
+  satStatus: 'above' | 'in-range' | 'below';
+  gpaStatus: 'above' | 'in-range' | 'below';
+  admissionReqs: string[];  // 이 학교/프로그램 핵심 조건
+  pros: string[];           // 꾸미 강점
+  cons: string[];           // 보완 필요 항목
+  verdict: string;          // 한줄 총평
+};
+
 type College = {
   id: string;
   name: string;
@@ -18,23 +31,24 @@ type College = {
   tier: Tier;
   location: string;
   state: string;
-  acceptRate: number;       // %
-  satRange: string;         // e.g. "1500–1580"
+  acceptRate: number;
+  satRange: string;
   actRange: string;
-  annualCOA: number;        // USD
+  annualCOA: number;
   aidPolicy: AidPolicy;
-  aiMatchScore: number;     // 0–100
-  programName?: string;     // BS/MD 프로그램 이름
-  programYears?: number;    // 6, 7, 8년제
+  aiMatchScore: number;
+  programName?: string;
+  programYears?: number;
   strengths: string[];
   applyUrl: string;
   deadlineEA?: string;
   deadlineED?: string;
   deadlineRD: string;
   notes: string;
-  researchFit: number;      // 연구 적합도 0–100
-  preMedRank?: number;      // Pre-Med 순위 (해당 시)
-  intlFriendly: boolean;    // 국제학생 재정지원 가능?
+  researchFit: number;
+  preMedRank?: number;
+  intlFriendly: boolean;
+  kummiAnalysis?: KummiAnalysis;
 };
 
 const colleges: College[] = [
@@ -66,6 +80,15 @@ const colleges: College[] = [
     researchFit: 92,
     preMedRank: 15,
     intlFriendly: true,
+    kummiAnalysis: {
+      chancePercent: 22,
+      satStatus: 'in-range',
+      gpaStatus: 'above',
+      admissionReqs: ['Why Medicine 에세이 (PLME 전용)', 'Why Brown 에세이', 'SAT 1530+ 권장', 'GPA 3.9+ 필수', '과학·봉사 활동 기록', 'ED 지원 강력 권장 (합격률 ↑)'],
+      pros: ['SAT 1570 — 합격자 평균 범위 ✅', 'GPA 4.0 — 상위 5% 수준 ✅', '국제 관점 — 다양성 어필 가능', 'PLME 인문의학 방향성과 봉사 배경 부합'],
+      cons: ['지원자 대부분 SAT 1550+ — 상위권 경쟁', 'PLME 에세이 품질이 합불 결정적', '미국 외 과학 과목 이수 기록 필요', '전문적 의료 봉사 경험 있으면 유리'],
+      verdict: '📌 SAT·GPA 조건 충족. 에세이 완성도가 합격의 핵심. ED1 필수 지원.',
+    },
   },
   {
     id: 'penn-state-pmm',
@@ -89,6 +112,15 @@ const colleges: College[] = [
     notes: '전액 자비 $75K/년 (국제학생 재정지원 없음). 7년 총 ~$525K. 의대 보장 가치 있음.',
     researchFit: 70,
     intlFriendly: false,
+    kummiAnalysis: {
+      chancePercent: 52,
+      satStatus: 'above',
+      gpaStatus: 'above',
+      admissionReqs: ['SAT 1490+ 권장', 'GPA 3.7+ 필수', '과학(Bio·Chem) 과목 강세', '의사 직업 이유 에세이', 'RD/EA 모두 지원 가능 (11/30 마감)'],
+      pros: ['SAT 1570 — 중앙값 1530 초과 ✅', 'GPA 4.0 — 충분히 상위권 ✅', '국제학생 지원 가능 확인됨', '7년제로 시간 단축'],
+      cons: ['전액자비 $75K/년 — 재정 부담 최대', '7년간 총 ~$525K 소요', 'Jefferson 의대 인지도 PLME보다 낮음', '의대 진입 후 visa 문제 주의 필요'],
+      verdict: '📌 스펙 충분. 재정 감당 가능하면 좋은 백업. 의대 보장 가치 있음.',
+    },
   },
   {
     id: 'uconn-spm',
@@ -112,6 +144,15 @@ const colleges: College[] = [
     notes: '공립대 중 가장 합리적. 재정지원 일부 가능. ~$63K/년은 BS/MD 중 저렴한 편.',
     researchFit: 65,
     intlFriendly: true,
+    kummiAnalysis: {
+      chancePercent: 62,
+      satStatus: 'above',
+      gpaStatus: 'above',
+      admissionReqs: ['SAT 1450+ 권장', 'GPA 3.7+ 필수', '과학 과목 강세 필수', '3개 에세이 (Why SPM / Why Med / Activities)', '공식 사이트에 국제학생 가능 명시'],
+      pros: ['SAT 1570 — 합격자 상위권 ✅', 'GPA 4.0 완벽 ✅', '국제학생 공식 지원 가능', '공립대 중 합리적 비용'],
+      cons: ['공립대라 재정지원 한계 있음', 'UConn 브랜드 상대적으로 낮음', 'Connecticut 지역 한정 의료 네트워크', 'BS/MD 중 경쟁 낮지만 의대 환경 제한적'],
+      verdict: '📌 스펙 충분히 초과. 합격 가능성 높음. 비용 대비 안전망으로 추천.',
+    },
   },
   {
     id: 'cwru-ppsp',
@@ -136,6 +177,15 @@ const colleges: College[] = [
     notes: '국제학생 지원 가능 확인. merit 장학금으로 $20K+ 감액 가능. admission@case.edu에 PPSP 상세 문의 권장.',
     researchFit: 78,
     intlFriendly: true,
+    kummiAnalysis: {
+      chancePercent: 55,
+      satStatus: 'above',
+      gpaStatus: 'above',
+      admissionReqs: ['SAT 1490+ 권장', 'GPA 3.8+ 필수', 'PPSP 별도 지원서 작성', '의료 봉사/연구 경험 권장', 'admission@case.edu 문의 후 지원', 'ED 마감 11/1'],
+      pros: ['SAT 1570 — 중앙값 초과 ✅', 'GPA 4.0 ✅', 'Merit 장학금 $20K+ 가능', '의공학 Background 어필'],
+      cons: ['국제학생 쿼터 정확히 미확인', '입학처 문의 필수 (이메일 권장)', 'CWRU SOM 의대 인지도 보통', 'Full-pay면 $75K/년 수준'],
+      verdict: '⚠️ 스펙 충분하나 국제학생 합격 쿼터 확인 후 지원 결정. Merit 장학금 가능성 높음.',
+    },
   },
   // BU MEDDEP → 2022년 프로그램 폐지로 삭제
   // RPI APS → 미국 시민권자/영주권자 전용, F-1 불가로 삭제
@@ -165,6 +215,15 @@ const colleges: College[] = [
     researchFit: 98,
     preMedRank: 12,
     intlFriendly: true,
+    kummiAnalysis: {
+      chancePercent: 7,
+      satStatus: 'in-range',
+      gpaStatus: 'above',
+      admissionReqs: ['SAT 1570+ (실질 합격자 중앙값 수준)', 'GPA 4.0 실질 필수', '연구·개선 독창적 성과 (올림피아드화학 등)', '에세이 독창성 극도 중요', 'EA 지원 가능 (11/1)'],
+      pros: ['SAT 1570 — 중앙값 일치 ✅', 'GPA 4.0 ✅', 'Need-blind 장학금 가능', '생명공학/의공학 세계 1위'],
+      cons: ['합격률 3.9% — 극도 경쟁', '수학·과학 치권자 가득', '연구/특허/없으면 차별화 어려움', '부전공귀 문화 상대적 강함'],
+      verdict: '🌟 드림. 스펙 충족하나 연구·창의성 차별화 없으면 매우 어려움. EA 도전.',
+    },
   },
   {
     id: 'harvard',
@@ -188,6 +247,15 @@ const colleges: College[] = [
     researchFit: 95,
     preMedRank: 1,
     intlFriendly: true,
+    kummiAnalysis: {
+      chancePercent: 7,
+      satStatus: 'in-range',
+      gpaStatus: 'above',
+      admissionReqs: ['SAT 1570+ (실질 합격자 중앙값)', 'GPA 4.0+ 실질 필수', '독보적 스토리 (무엇이 다른가)', 'Need-blind 장학금 가능', 'EA 지원 가능 (11/1)'],
+      pros: ['SAT 1570 ✅', 'GPA 4.0 ✅', 'Need-blind 최대 장학 혜택', 'Pre-Med 진학률 85%+ 최강 환경'],
+      cons: ['합격률 3.4% — 극도로 경쟁적', '국제학생 다양성 경쟁 극심', '에세이+과외활동 차별성 필수', '한국 국제학교 출신 경쟁자 많음'],
+      verdict: '🌟 드림. 지원 가치 충분하지만 합격 확신 금물. EA로 도전.',
+    },
   },
   {
     id: 'jhu',
@@ -306,6 +374,15 @@ const colleges: College[] = [
     researchFit: 82,
     preMedRank: 18,
     intlFriendly: true,
+    kummiAnalysis: {
+      chancePercent: 62,
+      satStatus: 'above',
+      gpaStatus: 'above',
+      admissionReqs: ['SAT 1440+ (Emory Scholars 1540+)', 'GPA 3.8+ (Scholars 4.0+)', 'Emory Scholars 별도 앱 필요 (ED)', 'Why Emory 에세이', 'Merit 장학금 자동 고려'],
+      pros: ['SAT 1570 — Scholars 기준도 초과 ✅', 'GPA 4.0 ✅', 'Merit $20~30K 현실적 가능', 'Emory 자체 의대 Pre-Med 최강'],
+      cons: ['Emory Scholars는 ED만 — 전략 필요', 'Merit 확정 아님, 별도 심사', '합격률 13% — 경쟁 있음', 'Atlanta 지역 근무 네트워크 한정'],
+      verdict: '✅ 최우선 Match! SAT·GPA 모두 초과. Scholars ED 지원 강력 추천.',
+    },
   },
   {
     id: 'vanderbilt',
@@ -329,6 +406,15 @@ const colleges: College[] = [
     researchFit: 85,
     preMedRank: 14,
     intlFriendly: true,
+    kummiAnalysis: {
+      chancePercent: 48,
+      satStatus: 'above',
+      gpaStatus: 'above',
+      admissionReqs: ['SAT 1480+ 권장', 'GPA 3.9+', 'Ingram Scholars 별도 에세이 (ED 필요)', 'Leadership + 봉사 강조', 'Why Vanderbilt 에세이'],
+      pros: ['SAT 1570 — 합격자 중앙값 초과 ✅', 'GPA 4.0 ✅', 'Ingram Scholars 봉사 배경 부합', 'Vanderbilt Med Top 15'],
+      cons: ['합격률 8.3% — 도전적', 'Ingram Scholars 미국 내 봉사 강조경향', '국제학생 Merit 장학 불확실성', 'Emory와 겹치면 ED 전략 조정 필요'],
+      verdict: '🚀 도전. Emory ED 후 RD 백업으로 적합. Ingram Scholars 도전 가치 있음.',
+    },
   },
   {
     id: 'Georgetown',
@@ -402,6 +488,15 @@ const colleges: College[] = [
     researchFit: 75,
     preMedRank: 25,
     intlFriendly: true,
+    kummiAnalysis: {
+      chancePercent: 78,
+      satStatus: 'above',
+      gpaStatus: 'above',
+      admissionReqs: ['SAT 1400+ 권장', 'GPA 3.7+', 'Dean\'s Honor Scholarship 자동 고려 (SAT 1480+)', '봉사·글로벌 활동 강조', 'ED 지원 시 Merit 극대화 가능'],
+      pros: ['SAT 1570 — 상위 1% 수준 ✅', 'GPA 4.0 ✅', 'Merit 장학 $25~35K 거의 확실', '봉사 중심 에세이 꾸미 배경 완벽 부합'],
+      cons: ['Tulane 브랜드 상위권 비교 시 제한', '뉴올리언스 지역 호불 문제', 'Pre-Med 경쟁 있음', 'Merit 후에도 실납부 $48K 예상'],
+      verdict: '✅ 안전 Match + Merit 확실. 학비 절감 Key 학교. 반드시 지원.',
+    },
   },
   {
     id: 'ucsd',
@@ -885,7 +980,69 @@ export default function CollegeList() {
                   {isExpanded && (
                     <div style={{ padding: '0 18px 18px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
 
-                      {/* 연구 적합도 바 */}
+                      {/* ── 꾸미 합격 분석 패널 ── */}
+                      {c.kummiAnalysis && (() => {
+                        const ka = c.kummiAnalysis!;
+                        const pct = ka.chancePercent;
+                        const pctColor = pct >= 60 ? 'var(--green-400)' : pct >= 35 ? 'var(--amber-400)' : pct >= 15 ? 'var(--orange-400, #fb923c)' : 'var(--rose-400)';
+                        const satChip = { above: { label: 'SAT ↑ 초과', c: 'var(--green-400)', bg: 'rgba(74,222,128,0.12)' }, 'in-range': { label: 'SAT ✓ 범위내', c: 'var(--amber-400)', bg: 'rgba(251,191,36,0.12)' }, below: { label: 'SAT ↓ 미달', c: 'var(--rose-400)', bg: 'rgba(251,113,133,0.12)' } }[ka.satStatus];
+                        const gpaChip = { above: { label: 'GPA ↑ 초과', c: 'var(--green-400)', bg: 'rgba(74,222,128,0.12)' }, 'in-range': { label: 'GPA ✓ 범위내', c: 'var(--amber-400)', bg: 'rgba(251,191,36,0.12)' }, below: { label: 'GPA ↓ 미달', c: 'var(--rose-400)', bg: 'rgba(251,113,133,0.12)' } }[ka.gpaStatus];
+                        return (
+                          <div style={{ marginBottom: '16px', padding: '14px', background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '10px' }}>
+                            {/* 헤더 */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--purple-400)' }}>🎯 꾸미 합격 가능성 분석</span>
+                              <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: satChip.bg, color: satChip.c }}>{satChip.label}</span>
+                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: gpaChip.bg, color: gpaChip.c }}>{gpaChip.label}</span>
+                              </div>
+                            </div>
+
+                            {/* 합격 가능성 게이지 */}
+                            <div style={{ marginBottom: '12px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>꾸미 합격 가능성 (추정)</span>
+                                <span style={{ fontWeight: 800, color: pctColor }}>{pct}%</span>
+                              </div>
+                              <div style={{ height: '8px', borderRadius: '100px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, ${pctColor}, rgba(167,139,250,0.7))`, borderRadius: '100px', transition: 'width 0.6s ease' }} />
+                              </div>
+                            </div>
+
+                            {/* 합격 조건 */}
+                            <div style={{ marginBottom: '10px' }}>
+                              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: 700 }}>📋 핵심 합격 조건</div>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                {ka.admissionReqs.map((r, i) => (
+                                  <span key={i} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)' }}>{r}</span>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* 강점 / 보완 */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '10px' }}>
+                              <div style={{ padding: '10px', background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)', borderRadius: '8px' }}>
+                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--green-400)', marginBottom: '5px' }}>✅ 꾸미 강점</div>
+                                {ka.pros.map((p, i) => (
+                                  <div key={i} style={{ fontSize: '10px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>• {p}</div>
+                                ))}
+                              </div>
+                              <div style={{ padding: '10px', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: '8px' }}>
+                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--amber-400)', marginBottom: '5px' }}>⚠️ 보완·강화 필요</div>
+                                {ka.cons.map((p, i) => (
+                                  <div key={i} style={{ fontSize: '10px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>• {p}</div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* 총평 */}
+                            <div style={{ fontSize: '11px', color: 'var(--text-primary)', fontWeight: 600, padding: '8px 10px', background: 'rgba(255,255,255,0.04)', borderRadius: '6px' }}>
+                              {ka.verdict}
+                            </div>
+                          </div>
+                        );
+                      })()}
+
                       <div style={{ marginBottom: '14px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '5px' }}>
                           <span style={{ color: 'var(--text-muted)' }}>🔬 연구 적합도</span>
