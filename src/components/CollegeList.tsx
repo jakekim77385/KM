@@ -499,10 +499,22 @@ type Tab = 'bsmd' | 'stem' | 'strategy';
 export default function CollegeList() {
   const [tab, setTab] = useState<Tab>('bsmd');
   const [sortKey, setSortKey] = useState<SortKey>('match');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc'); // desc = 좋은것 먼저
   const [filterTier, setFilterTier] = useState<Tier | 'all'>('all');
   const [filterIntl, setFilterIntl] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // 정렬 버튼 클릭: 같은 키 → 방향 토글, 다른 키 → 해당 키의 기본 방향으로
+  const handleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      // 각 키별 기본 방향: match·research는 높을수록 좋으니 desc, accept·cost는 낮을수록 좋으니 asc
+      setSortDir(key === 'accept' || key === 'cost' ? 'asc' : 'desc');
+    }
+  };
 
   const filtered = colleges
     .filter(c => tab === 'strategy' ? true : c.category === tab)
@@ -515,10 +527,11 @@ export default function CollegeList() {
       (c.programName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
     )
     .sort((a, b) => {
-      if (sortKey === 'match')    return b.aiMatchScore - a.aiMatchScore;
-      if (sortKey === 'accept')   return a.acceptRate - b.acceptRate;
-      if (sortKey === 'cost')     return a.annualCOA - b.annualCOA;
-      if (sortKey === 'research') return b.researchFit - a.researchFit;
+      const dir = sortDir === 'asc' ? 1 : -1;
+      if (sortKey === 'match')    return dir * (a.aiMatchScore - b.aiMatchScore);
+      if (sortKey === 'accept')   return dir * (a.acceptRate - b.acceptRate);
+      if (sortKey === 'cost')     return dir * (a.annualCOA - b.annualCOA);
+      if (sortKey === 'research') return dir * (a.researchFit - b.researchFit);
       return 0;
     });
 
@@ -740,16 +753,25 @@ export default function CollegeList() {
             <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px', alignItems: 'center' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>정렬:</span>
               {([
-                ['match', '🤖 AI매치'],
-                ['accept', '📊 합격률'],
-                ['cost', '💰 학비'],
-                ['research', '🔬 연구'],
-              ] as const).map(([k, l]) => (
-                <button key={k} id={`sort-${k}`}
-                  className={`btn ${sortKey === k ? 'btn-primary' : 'btn-ghost'}`}
-                  style={{ fontSize: '11px', padding: '5px 10px' }}
-                  onClick={() => setSortKey(k)}>{l}</button>
-              ))}
+                ['match',    '🤖 AI매치',  'desc', 'asc',  '▼ 높은순', '▲ 낮은순'],
+                ['accept',   '📊 합격률',  'asc',  'desc', '▲ 어려운', '▼ 쉬운순'],
+                ['cost',     '💰 학비',    'asc',  'desc', '▲ 저렴순', '▼ 비싼순'],
+                ['research', '🔬 연구',    'desc', 'asc',  '▼ 높은순', '▲ 낮은순'],
+              ] as const).map(([k, l, defaultDir, altDir, descLabel, ascLabel]) => {
+                const isActive = sortKey === k;
+                const dirLabel = isActive ? (sortDir === 'asc' ? ascLabel : descLabel) : '';
+                return (
+                  <button key={k} id={`sort-${k}`}
+                    className={`btn ${isActive ? 'btn-primary' : 'btn-ghost'}`}
+                    style={{ fontSize: '11px', padding: '5px 10px', gap: '3px', minWidth: 'fit-content' }}
+                    onClick={() => handleSort(k)}>
+                    {l}
+                    {isActive && (
+                      <span style={{ fontSize: '10px', opacity: 0.85, marginLeft: '2px' }}>{dirLabel}</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
