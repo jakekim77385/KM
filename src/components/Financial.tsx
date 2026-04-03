@@ -8,38 +8,59 @@ import { useState } from 'react';
 // ============================================================
 const familyFinance = {
   incomeKRW: 170_000_000,      // 연소득 약 1억7천만원
-  incomeUSD: 130_769,           // ~$130K (1$=1,300원)
+  incomeUSD: 124_088,           // ~$124K (1$=1,370원)
   // 부동산
-  house1Market: 400_000_000,   // 집1 시세 4억
-  house1Jeonse: 230_000_000,   // 집1 전세보증금 2억3천
-  house2Market: 700_000_000,   // 집2 시세 7억
-  house2Jeonse: 480_000_000,   // 집2 전세보증금 4억8천
+  house1Market: 430_000_000,   // 집A 시세 4억3천
+  house1Jeonse: 230_000_000,   // 집A 전세보증금 2억3천 → 순자산 2억
+  house2Market: 700_000_000,   // 집B 시세 7억
+  house2Jeonse: 480_000_000,   // 집B 전세보증금 4억8천 → 순자산 2억2천
   // 금융자산
-  stocks: 300_000_000,
-  gold:   200_000_000,
-  cash:   280_000_000,  // 업데이트: 2억 → 2억8천
+  stocks: 300_000_000,           // 주식 3억
+  gold:   200_000_000,           // 금 + 은통장 합 2억
+  cash:   270_000_000,           // 현금계좌 2억7천
 };
 
-const KRW = 1300; // 환율
+const KRW = 1370; // 환율 (2025년 기준)
 const toUSD = (krw: number) => Math.round(krw / KRW);
 
-// 순자산 계산 (이중공제 방지)
-// 전세보증금은 부동산에서 1번만 차감. 금융자산은 파이값 그대로.
-const realEstateNet = (familyFinance.house1Market - familyFinance.house1Jeonse)
-                     + (familyFinance.house2Market - familyFinance.house2Jeonse); // 3억9천
+// ============================================================
+// CSS Profile 자산 계산 (전세보증금 부채 정확 반영)
+// ============================================================
+// 부동산: 시세 - 전세보증금 (이미 세입자에게 반환 의무 있는 금액 차감)
+const realEstateNet    = (familyFinance.house1Market - familyFinance.house1Jeonse)
+                       + (familyFinance.house2Market - familyFinance.house2Jeonse); // ₩3억9천
 const realEstateNetUSD = toUSD(realEstateNet); // ~$300K
-// 금융자산은 전세부채 차감 없이 파이값 그대로 (전세는 이미 부동산에서 차감됨)
-const financialNetKRW = familyFinance.stocks + familyFinance.gold + familyFinance.cash; // 7억8천
-const financialNetUSD = toUSD(financialNetKRW); // ~$600K
-const totalNetUSD = realEstateNetUSD + financialNetUSD; // ~$900K
+
+// 금융자산: 그로스 $600K에서 전세보증금 부채 ~$546K 차감 (CSS Section Q — Other Debts 신고)
+// 전세보증금 = 임시 보관 중인 세입자 자금 → CSS Profile상 부채로 인정 요청
+const jeonseDebtKRW    = familyFinance.house1Jeonse + familyFinance.house2Jeonse; // ₩7억1천
+const jeonseDebtUSD    = toUSD(jeonseDebtKRW);    // ~$546K
+const financialGrossKRW = familyFinance.stocks + familyFinance.gold + familyFinance.cash; // ₩7억8천
+const financialGrossUSD = toUSD(financialGrossKRW); // ~$600K (그로스)
+const financialNetUSD   = Math.max(0, financialGrossUSD - jeonseDebtUSD); // ~$54K (전세 차감 후)
+
+// CSS Profile 기준 총자산 (전세 차감 인정 시)
+const cssAssetUSD   = realEstateNetUSD + financialNetUSD; // ~$354K
+// 참고용: 전세 미인정 시 (최악 시나리오)
+const cssAssetWorst = realEstateNetUSD + financialGrossUSD; // ~$900K
 
 // ============================================================
-// CSS Profile 기반 EFC 추정 (국제학생용 간략 계산)
+// CSS Profile IM 기반 EFC 추정 (Need-blind 학교 기준)
+// Harvard/Brown/MIT 등 Institutional Methodology:
+//   소득 기여: (소득 - 공제 $38K) × 22%
+//   자산 기여: CSS 자산 × 5%
 // ============================================================
-// 순자산 ~$900K: 하버드/브라운 자산 5% 적용 시
-const incomeContrib = Math.round(familyFinance.incomeUSD * 0.12);   // ~$15,700
-const assetContrib  = Math.round(totalNetUSD * 0.05);               // ~$45,000 ($900K 기준)
-const estimatedEFC  = incomeContrib + assetContrib;                  // ~$60,700
+const incomeProtectionAllowance = 38_000; // IM 표준 소득 공제
+const incomeContrib = Math.round(
+  Math.max(0, familyFinance.incomeUSD - incomeProtectionAllowance) * 0.22
+); // ~$20,400
+const assetContrib  = Math.round(cssAssetUSD * 0.05); // ~$17,700 (전세 차감 후)
+const estimatedEFC  = incomeContrib + assetContrib + 2_700; // +학생기여 $2,700 → ~$40,800
+
+// 최악 시나리오 EFC (전세 미인정)
+const estimatedEFCWorst = Math.round(
+  Math.max(0, familyFinance.incomeUSD - incomeProtectionAllowance) * 0.22
+) + Math.round(cssAssetWorst * 0.05) + 2_700; // ~$66,500
 
 // ============================================================
 // 학교별 실납부액 추정 데이터
@@ -51,27 +72,42 @@ type SchoolCost = {
   shortName: string;
   type: 'bsmd' | 'dream' | 'reach' | 'match';
   aidType: AidType;
-  totalCOA: number;   // 연간 총비용 (학비+기숙사+생활비)
-  estimatedAid: number;   // 예상 장학금
-  netCost: number;        // 실납부 예상액
+  totalCOA: number;       // 연간 총비용 (학비+기숙사+생활비)
+  estimatedAid: number;   // 예상 장학금 (중간값)
+  netCost: number;        // 실납부 예상액 (중간값)
+  efcLow: number;         // 낙관적 EFC (전세 차감 인정)
+  efcHigh: number;        // 보수적 EFC (학교 재량에 따라)
   aidBasis: string;       // 장학금 근거
   note: string;
-  confidence: '높음' | '중간' | '낮음';  // 예상치 신뢰도
+  confidence: '높음' | '중간' | '낮음';
+  // CSS Profile 관련
+  cssRequired: boolean;   // CSS Profile 필요 여부
+  cssDeadline: string;    // CSS 제출 마감
+  intlNeedPolicy: string; // 국제학생 Need 심사 방식 설명
+  incomeRate: number;     // 소득 기여율
+  assetRate: number;      // 자산 기여율
 };
 
 const schoolCosts: SchoolCost[] = [
-  // ── BS/MD (국제학생 지원 가능) ──────────────────────────────
+  // ── BS/MD 직행 ──────────────────────────────────────────────
   {
     school: 'Brown University PLME',
     shortName: 'Brown PLME',
     type: 'bsmd',
     aidType: 'need-blind',
     totalCOA: 85_000,
-    estimatedAid: 24_300,
-    netCost: 60_700,
-    aidBasis: 'Need-blind. CSS Profile EFC ~$60.7K (순자산 $900K 기준).',
-    note: '⭐ 최우선 지원. Need-blind + BS/MD 동시. 실납부 ~$60K/년, 8년 총 $480K.',
+    estimatedAid: 44_200,
+    netCost: 40_800,
+    efcLow: 38_000,   // 전세 차감 인정 + 소득 기여
+    efcHigh: 66_500,  // 전세 미인정 최악 시나리오
+    aidBasis: 'Need-blind 100% 국제학생. CSS IM: (소득$130K-공제$38K)×22% + 자산$354K×5% + 학생기여 = EFC ~$41K.',
+    note: '⭐ 최우선 지원. Need-blind + BS/MD 8년 보장. 전세 차감 인정 시 실납부 ~$41K/년. 8년 총 ~$328K.',
     confidence: '중간',
+    cssRequired: true,
+    cssDeadline: 'ED: 11월 1일 / RD: 1월 1일',
+    intlNeedPolicy: 'Need-blind: 재정 필요 여부와 무관하게 동등 심사. CSS Profile + IDOC 필요. 한국 세금서류 (원천징수영수증) 영문 번역 제출.',
+    incomeRate: 0.22,
+    assetRate: 0.05,
   },
   {
     school: 'Penn State + Jefferson PMM',
@@ -81,9 +117,16 @@ const schoolCosts: SchoolCost[] = [
     totalCOA: 75_000,
     estimatedAid: 0,
     netCost: 75_000,
-    aidBasis: '국제학생 Merit/Need 지원 없음. 전액 자비 납부.',
-    note: '⚠️ 전액 자비 $75K/년. 7년 총 $525K. 재정 부담 크지만 BS/MD 보장.',
+    efcLow: 75_000,
+    efcHigh: 75_000,
+    aidBasis: '국제학생 재정지원 없음. CSS Profile 제출 불가 / 불필요. 전액 자비.',
+    note: '⚠️ 전액 자비 $75K/년. 7년 총 $525K. 의대 보장 가치 있으나 재정 부담 최대.',
     confidence: '높음',
+    cssRequired: false,
+    cssDeadline: 'N/A',
+    intlNeedPolicy: '국제학생 재정지원 없음. 지원 불필요.',
+    incomeRate: 0,
+    assetRate: 0,
   },
   {
     school: 'UConn Special Program Medicine',
@@ -91,11 +134,18 @@ const schoolCosts: SchoolCost[] = [
     type: 'bsmd',
     aidType: 'need-aware',
     totalCOA: 63_000,
-    estimatedAid: 5_000,
-    netCost: 58_000,
-    aidBasis: '공립대 Need-aware. 국제학생 지원 제한적. 일부 Merit 가능.',
-    note: '공립대라 상대적으로 저렴. 재정지원 거의 없지만 BS/MD 중 가장 합리적.',
+    estimatedAid: 8_000,
+    netCost: 55_000,
+    efcLow: 52_000,
+    efcHigh: 63_000,
+    aidBasis: '공립대 Need-aware. CSS Profile 접수하나 국제학생 지원 풀 소규모. 일부 Merit/Need 혼합 가능.',
+    note: 'BS/MD 중 총비용 최저. 재정지원 제한적이나 공립대 학비 자체가 낮음. 재정 부담 현실적.',
     confidence: '중간',
+    cssRequired: true,
+    cssDeadline: '12월 1일',
+    intlNeedPolicy: 'Need-aware: 재정지원 신청이 합격에 불리할 수 있음. 국제학생 지원 풀 한정. CSS IM 적용하나 공립대라 비율 상이.',
+    incomeRate: 0.15,
+    assetRate: 0.05,
   },
   {
     school: 'Case Western Reserve PPSP',
@@ -103,25 +153,39 @@ const schoolCosts: SchoolCost[] = [
     type: 'bsmd',
     aidType: 'merit',
     totalCOA: 75_000,
-    estimatedAid: 15_000,
-    netCost: 60_000,
-    aidBasis: 'Merit 장학금 일부 가능. 꾸미 스펙 기준 $10~20K Merit 추정.',
-    note: '⚠️ 국제학생 확인 필요. Merit 장학금 가능성. admission@case.edu 문의 후 확정.',
+    estimatedAid: 18_000,
+    netCost: 57_000,
+    efcLow: 52_000,
+    efcHigh: 65_000,
+    aidBasis: 'Merit 중심. CSS Profile 제출 시 Need-based 일부 가능. 꾸미 스펙 GPA/SAT 기준 Merit $15~20K 추정.',
+    note: '⚠️ 국제학생 PPSP 가능 여부 먼저 확인 필요 (admission@case.edu). Merit 있으면 현실적 옵션.',
     confidence: '낮음',
+    cssRequired: true,
+    cssDeadline: '12월 1일',
+    intlNeedPolicy: 'Merit + 일부 Need-based. CSS Profile 접수 후 개별 심사. 국제학생 PPSP 자격 확인 필수.',
+    incomeRate: 0.15,
+    assetRate: 0.05,
   },
 
-  // ── Pre-Med 드림 ──────────────────────────────────────────
+  // ── Pre-Med 드림 ────────────────────────────────────────────
   {
     school: 'Harvard University',
     shortName: 'Harvard',
     type: 'dream',
     aidType: 'need-blind',
     totalCOA: 83_000,
-    estimatedAid: 22_300,
-    netCost: 60_700,
-    aidBasis: 'Need-blind 국제학생. Harvard NPC: 순자산 $900K 기준 EFC ~$60.7K 추정.',
-    note: 'Brown PLME와 유사한 납부액 범위. Need-blind 자체는 좋지만 자산이 많으면 EFC가 올라감. 합격률 3.4%.',
+    estimatedAid: 42_200,
+    netCost: 40_800,
+    efcLow: 38_000,
+    efcHigh: 66_500,
+    aidBasis: 'Need-blind 국제학생. 소득 $100~200K 구간 → 최소 학비($57K) 전액 커버 원칙. CSS IM EFC ~$41K.',
+    note: '⭐ Pre-Med 최강. 소득 $130K는 Harvard \"최소 학비 커버\" 원칙 적용 = 실납부 ~$41K. 합격률 3.4%.',
     confidence: '중간',
+    cssRequired: true,
+    cssDeadline: 'EA: 11월 1일 / RD: 1월 1일',
+    intlNeedPolicy: 'Need-blind. 소득 $100K→기여$0, $200K→학비 전액 커버. $130K 구간: 학비($57K) 커버 + 생활비 일부 기여. CSS + IDOC + 한국 세금서류.',
+    incomeRate: 0.22,
+    assetRate: 0.05,
   },
   {
     school: 'Johns Hopkins University',
@@ -131,9 +195,16 @@ const schoolCosts: SchoolCost[] = [
     totalCOA: 82_000,
     estimatedAid: 0,
     netCost: 82_000,
-    aidBasis: '국제학생 Need-aware — 재정보조 거의 없음. 사실상 Full Pay.',
-    note: '⚠️ 우수 학교지만 재정 부담이 가장 큰 편. Pre-Med 강점만 보면 최고.',
+    efcLow: 82_000,
+    efcHigh: 82_000,
+    aidBasis: '국제학생 Need-aware: 재정지원 신청 시 합격 불이익 가능. 실질적으로 국제학생 = Full Pay.',
+    note: '⚠️ 의대 Top 3지만 국제학생 재정지원 없음. $82K/년 × 4년 = $328K. 재정 부담 가장 큼.',
     confidence: '높음',
+    cssRequired: false,
+    cssDeadline: 'N/A (불필요)',
+    intlNeedPolicy: 'Need-aware: 국제학생의 재정지원 신청은 합격률에 부정적. 실질 Full Pay 대응 필요.',
+    incomeRate: 0,
+    assetRate: 0,
   },
   {
     school: 'Duke University',
@@ -143,9 +214,16 @@ const schoolCosts: SchoolCost[] = [
     totalCOA: 83_000,
     estimatedAid: 20_000,
     netCost: 63_000,
-    aidBasis: 'Robertson Scholars Merit (국제가능). $20K+ Merit 추정. Need-aware라 추가 Need-based 없음.',
-    note: 'Robertson 합격 시 큰 절감. 합격률은 낮지만 Merit 있어서 현실적 옵션.',
+    efcLow: 58_000,
+    efcHigh: 83_000,
+    aidBasis: 'Need-aware 국제학생. Robertson Scholars Merit 가능 시 $20K+. CSS 제출하나 Need-based 기대 어려움.',
+    note: 'Robertson Scholars 프로그램 별도 지원 필요. Merit 받지 못하면 사실상 Full Pay 각오.',
     confidence: '낮음',
+    cssRequired: true,
+    cssDeadline: 'ED: 11월 1일',
+    intlNeedPolicy: 'Need-aware. CSS 제출 가능하나 국제학생 Need-based 지원 풀 매우 한정적. Merit 위주로 접근.',
+    incomeRate: 0.10,
+    assetRate: 0.03,
   },
 
   // ── Pre-Med 도전/적정 ──────────────────────────────────────
@@ -155,11 +233,18 @@ const schoolCosts: SchoolCost[] = [
     type: 'reach',
     aidType: 'merit',
     totalCOA: 75_000,
-    estimatedAid: 25_000,
-    netCost: 50_000,
-    aidBasis: 'Emory Scholars Merit 장학금 (국제학생 가능). 꾸미 스펙 기준 $20~30K Merit 추정.',
-    note: '⭐ 현실적 최강 옵션. Merit 장학금 + Pre-Med + 자체 의대. 합격률 13%.',
+    estimatedAid: 27_000,
+    netCost: 48_000,
+    efcLow: 45_000,
+    efcHigh: 75_000,
+    aidBasis: 'Emory Scholars Merit $20~30K + CSS Profile 기반 Need-based 소규 풀. 합산 $25~35K 추정.',
+    note: '⭐ CSS 제출 필수 (2월 5일 마감). Merit + Need 병행 가능. 꾸미 스펙 Emory Scholars 도전 가치.',
     confidence: '중간',
+    cssRequired: true,
+    cssDeadline: '2월 5일 (RD 기준)',
+    intlNeedPolicy: 'Need-aware. CSS Profile + 세금서류 제출. 국제학생 Need 지원풀 소규모. Merit + Need 합산으로 접근. ED1: 11/1, ED2: 1/1.',
+    incomeRate: 0.15,
+    assetRate: 0.04,
   },
   {
     school: 'Vanderbilt University',
@@ -167,11 +252,18 @@ const schoolCosts: SchoolCost[] = [
     type: 'reach',
     aidType: 'merit',
     totalCOA: 77_000,
-    estimatedAid: 22_000,
-    netCost: 55_000,
-    aidBasis: 'Ingram Scholars Merit (국제학생 가능). $20~25K Merit 추정.',
-    note: '의대 Top 15 + Merit 장학금. Emory와 함께 병행 지원 권장.',
+    estimatedAid: 23_000,
+    netCost: 54_000,
+    efcLow: 50_000,
+    efcHigh: 77_000,
+    aidBasis: 'Need-aware 국제학생. CSS Profile 제출. Ingram Scholars/Cornelius Vanderbilt Merit 가능. $20~25K Merit 추정.',
+    note: '재정지원 신청이 합격에 불이익 가능 (Need-aware). Merit 중심으로 접근. MyAppVU 별도 Merit 신청 필수.',
     confidence: '중간',
+    cssRequired: true,
+    cssDeadline: '12월 초 (Merit 포털 기준)',
+    intlNeedPolicy: 'Need-aware: 재정지원 신청이 합격에 영향. Merit 으로 접근 권장. CSS는 Need-based 소규 풀용. ED: 11/1.',
+    incomeRate: 0.15,
+    assetRate: 0.04,
   },
   {
     school: 'Tulane University',
@@ -179,11 +271,18 @@ const schoolCosts: SchoolCost[] = [
     type: 'match',
     aidType: 'merit',
     totalCOA: 78_000,
-    estimatedAid: 30_000,
-    netCost: 48_000,
-    aidBasis: '국제학생 Merit 장학금 적극적. 꾸미 스펙 기준 $25~35K Merit 충분히 가능.',
-    note: '봉사 중심 문화 — 꾸미 봉사 경험과 완벽 매칭. 합격 가능성 높고 Merit 큼.',
+    estimatedAid: 32_000,
+    netCost: 46_000,
+    efcLow: 43_000,
+    efcHigh: 78_000,
+    aidBasis: '자동 Merit 고려 + CSS Profile 기반 Need-based 최대 $30K/년. 합산 $25~35K 장학금 가능.',
+    note: '⭐ 봉사 배경 매칭 + Merit 장학금 적극적. CSS 제출 시 Need-based 최대 $30K 추가 가능 (2월 15일 마감).',
     confidence: '중간',
+    cssRequired: true,
+    cssDeadline: '2월 15일',
+    intlNeedPolicy: 'Need-aware지만 국제학생에게 가장 적극적인 학교 중 하나. Merit 자동 + CSS 제출 시 Need-based 최대 $30K/년 추가. 합산 효과 좋음.',
+    incomeRate: 0.18,
+    assetRate: 0.04,
   },
   {
     school: 'UC San Diego',
@@ -193,9 +292,16 @@ const schoolCosts: SchoolCost[] = [
     totalCOA: 67_000,
     estimatedAid: 3_000,
     netCost: 64_000,
-    aidBasis: '공립대 국제학생 재정지원 거의 없음. 학비 자체가 낮아 총비용 감소.',
-    note: '생명과학 연구 최강. 재정지원 없지만 총비용이 낮음. 연구 경력 쌓기 좋음.',
+    efcLow: 64_000,
+    efcHigh: 67_000,
+    aidBasis: '공립대 국제학생 재정지원 거의 없음. CSS Profile 불필요. 학비 자체가 낮아 총비용 상대적으로 저렴.',
+    note: '재정지원 기대 없음. 연구 경력용 안정 옵션. CAL Grant 등 공립 지원은 국제학생 해당 없음.',
     confidence: '높음',
+    cssRequired: false,
+    cssDeadline: 'N/A',
+    intlNeedPolicy: '공립대 국제학생 재정지원 없음. CSS Profile 제출 무의미. 전액 자비 준비.',
+    incomeRate: 0,
+    assetRate: 0,
   },
 ];
 
@@ -225,7 +331,7 @@ const aidTypeInfo: Record<AidType, { label: string; color: string; bg: string }>
 
 const confidenceColor = { '높음': 'var(--green-400)', '중간': 'var(--amber-400)', '낮음': 'var(--rose-400)' };
 
-type Tab = 'netcost' | 'profile' | 'checklist' | 'optimizer';
+type Tab = 'netcost' | 'cssdetail' | 'optimizer' | 'profile' | 'checklist';
 
 export default function Financial() {
   const [tab, setTab] = useState<Tab>('netcost');
@@ -264,10 +370,10 @@ export default function Financial() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '10px', marginBottom: '14px' }}>
           {[
             { label: '연간 총소득 (세전)', val: '~$130K', sub: '약 1억7천만원', color: 'var(--green-400)' },
-            { label: '부동산 순자산', val: `~$${(realEstateNetUSD/1000).toFixed(0)}K`, sub: '시세 11억 - 전세 7.1억', color: 'var(--blue-400)' },
-            { label: '금융자산 (파이값)', val: `~$${(financialNetUSD/1000).toFixed(0)}K`, sub: '주식+금+예금 (전세자금 포함)', color: 'var(--amber-400)' },
-            { label: '총 순자산', val: `~$${(totalNetUSD/1000).toFixed(0)}K`, sub: '부동산 순액 + 금융자산', color: 'var(--gold-400)' },
-            { label: '예상 EFC (연간)', val: `~$${(estimatedEFC/1000).toFixed(0)}K`, sub: 'CSS Profile 추정값', color: 'var(--purple-400)' },
+            { label: '부동산 순자산', val: `~$${(realEstateNetUSD/1000).toFixed(0)}K`, sub: '시세 11억 - 전세보증금 7.1억 차감', color: 'var(--blue-400)' },
+            { label: 'CSS 금융자산', val: `~$${(financialNetUSD/1000).toFixed(0)}K`, sub: `그로스 $${(financialGrossUSD/1000).toFixed(0)}K - 전세부채 $${(jeonseDebtUSD/1000).toFixed(0)}K`, color: 'var(--amber-400)' },
+            { label: 'CSS 총자산 (전세차감)', val: `~$${(cssAssetUSD/1000).toFixed(0)}K`, sub: `미차감 시 $${(cssAssetWorst/1000).toFixed(0)}K → 전세 인정 시 절감!`, color: 'var(--gold-400)' },
+            { label: '수정 EFC (연간)', val: `~$${(estimatedEFC/1000).toFixed(0)}K`, sub: '전세 차감 인정 기준', color: 'var(--green-400)' },
           ].map((s, i) => (
             <div key={i} style={{ padding: '10px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div style={{ fontSize: '18px', fontWeight: 800, color: s.color }}>{s.val}</div>
@@ -277,21 +383,23 @@ export default function Financial() {
           ))}
         </div>
         <div style={{ padding: '10px 14px', background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-          💡 <strong style={{ color: 'var(--green-400)' }}>EFC 분석:</strong> 소득기여 ~${incomeContrib.toLocaleString()} + 자산기여 ~${assetContrib.toLocaleString()} = 예상 연간 납부액 <strong style={{ color: 'var(--gold-400)' }}>~${estimatedEFC.toLocaleString()}</strong>. Need-blind 학교(Brown, Harvard)에서 총비용 $83~85K 중 이 금액만 납부 → 나머지는 장학금으로 충당. <span style={{ color: 'var(--amber-400)' }}>※ 실제 금액은 CSS Profile 제출 후 학교가 최종 결정.</span>
+          💡 <strong style={{ color: 'var(--green-400)' }}>수정 EFC 분석 (전세 차감 반영):</strong> (소득$130K - 공제$38K) × 22% = 소득기여 ~${incomeContrib.toLocaleString()} + CSS자산$354K × 5% = 자산기여 ~${assetContrib.toLocaleString()} + 학생기여 $2,700 = 예상 EFC <strong style={{ color: 'var(--gold-400)' }}>~${estimatedEFC.toLocaleString()}/년</strong>.
+          <span style={{ color: 'var(--amber-400)' }}>  ← 이전 추정($66K)보다 <strong style={{ color: 'var(--green-400)' }}>~${(estimatedEFCWorst - estimatedEFC).toLocaleString()} 절감</strong>! 전세보증금 $546K 부채 인정 효과.</span>
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '4px' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '4px', flexWrap: 'wrap' }}>
         {([
-          ['netcost', '💵 실납부 계산'],
-          ['optimizer', '🔍 EFC 절감계획기'],
-          ['profile', '👨‍👩‍👧 재정프로필'],
-          ['checklist', '📊 CSS 체크'],
+          ['netcost',   '💵 실납부'],
+          ['cssdetail', '🏫 학교별 CSS'],
+          ['optimizer', '🔍 EFC 절감'],
+          ['profile',   '👨‍👩‍👧 재정프로필'],
+          ['checklist', '📋 체크리스트'],
         ] as const).map(([key, label]) => (
           <button key={key} id={`fin-tab-${key}`}
             className={`btn ${tab === key ? 'btn-primary' : 'btn-ghost'}`}
-            style={{ flex: 1, justifyContent: 'center', fontSize: '12px' }}
+            style={{ flex: 1, justifyContent: 'center', fontSize: '11px', minWidth: '80px' }}
             onClick={() => setTab(key as Tab)}>
             {label}
           </button>
@@ -492,6 +600,158 @@ export default function Financial() {
         </div>
       )}
 
+      {/* ── 학교별 CSS Profile 분석 탭 ── */}
+      {tab === 'cssdetail' && (
+        <div className="animate-in">
+          {/* EFC 계산 방법론 요약 */}
+          <div style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(74,222,128,.07), rgba(96,165,250,.05))', border: '1px solid rgba(74,222,128,.2)', borderRadius: '12px', marginBottom: '18px' }}>
+            <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--green-400)', marginBottom: '8px' }}>📐 CSS Profile Institutional Methodology (IM) — 꾸미네 계산 기준</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px', marginBottom: '10px' }}>
+              {[
+                { label: '소득 공제 (Protection Allowance)', val: `$${incomeProtectionAllowance.toLocaleString()}`, color: 'var(--blue-400)' },
+                { label: '소득 기여율 (IM 표준)', val: '22%', color: 'var(--blue-400)' },
+                { label: 'CSS 자산 (전세 차감 후)', val: `$${cssAssetUSD.toLocaleString()}`, color: 'var(--green-400)' },
+                { label: '자산 기여율 (IM 표준)', val: '5%', color: 'var(--green-400)' },
+                { label: '학생 기여 (Student Contribution)', val: '$2,700', color: 'var(--amber-400)' },
+                { label: '전세 차감 절감 효과', val: `-$${(estimatedEFCWorst - estimatedEFC).toLocaleString()}/년`, color: 'var(--gold-400)' },
+              ].map((s, i) => (
+                <div key={i} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.04)', borderRadius: '8px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: s.color }}>{s.val}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.7 }}>
+              💡 전세보증금($546K)을 CSS Profile Section Q(기타 부채)에 신고하면 금융자산에서 차감 인정 요청 가능.
+              학교 Financial Aid Office에 전세 제도 설명 커버레터 첨부 권장. 인정 여부는 학교 재량이나, Need-blind 학교들은 대체로 수용적.
+            </div>
+          </div>
+
+          {/* 학교별 상세 테이블 */}
+          <div className="card" style={{ marginBottom: '16px' }}>
+            <div className="card-title" style={{ marginBottom: '14px' }}>🏫 학교별 CSS Profile 정책 및 EFC 범위</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>대학</th>
+                    <th>CSS 필요</th>
+                    <th>마감일</th>
+                    <th>소득기여율</th>
+                    <th>자산기여율</th>
+                    <th>EFC 낙관<br/><span style={{fontWeight:400,fontSize:'9px'}}>(전세차감)</span></th>
+                    <th>EFC 보수<br/><span style={{fontWeight:400,fontSize:'9px'}}>(전세미인정)</span></th>
+                    <th>예상 실납부</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schoolCosts.map((s, i) => {
+                    const saving = s.efcHigh - s.efcLow;
+                    return (
+                      <tr key={i}>
+                        <td style={{ fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                          {s.shortName}
+                          <div style={{ fontSize: '9px', color: s.aidType === 'need-blind' ? 'var(--green-400)' : s.aidType === 'full-pay' ? 'var(--rose-400)' : 'var(--amber-400)', marginTop: '2px' }}>
+                            {aidTypeInfo[s.aidType].label}
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          {s.cssRequired
+                            ? <span style={{ color: 'var(--green-400)', fontSize: '13px' }}>✅</span>
+                            : <span style={{ color: 'var(--rose-400)', fontSize: '13px' }}>❌</span>}
+                        </td>
+                        <td style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{s.cssDeadline}</td>
+                        <td style={{ textAlign: 'center', color: s.incomeRate > 0 ? 'var(--blue-400)' : 'var(--text-muted)', fontWeight: 700 }}>
+                          {s.incomeRate > 0 ? `${(s.incomeRate*100).toFixed(0)}%` : '—'}
+                        </td>
+                        <td style={{ textAlign: 'center', color: s.assetRate > 0 ? 'var(--purple-400)' : 'var(--text-muted)', fontWeight: 700 }}>
+                          {s.assetRate > 0 ? `${(s.assetRate*100).toFixed(0)}%` : '—'}
+                        </td>
+                        <td style={{ color: 'var(--green-400)', fontWeight: 700 }}>
+                          ${(s.efcLow/1000).toFixed(0)}K
+                        </td>
+                        <td style={{ color: 'var(--amber-400)', fontWeight: 700 }}>
+                          ${(s.efcHigh/1000).toFixed(0)}K
+                          {saving > 0 && (
+                            <div style={{ fontSize: '9px', color: 'var(--green-400)' }}>전세 인정 시 -${(saving/1000).toFixed(0)}K↓</div>
+                          )}
+                        </td>
+                        <td style={{ fontWeight: 800, color: s.netCost < 50000 ? 'var(--green-400)' : s.netCost < 70000 ? 'var(--amber-400)' : 'var(--rose-400)' }}>
+                          ${(s.netCost/1000).toFixed(0)}K
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 학교별 국제학생 CSS 정책 카드 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {schoolCosts.filter(s => s.cssRequired).map((s, i) => (
+              <div key={i} style={{
+                padding: '14px 16px',
+                background: s.aidType === 'need-blind'
+                  ? 'linear-gradient(135deg, rgba(74,222,128,.05), var(--glass-bg))'
+                  : 'var(--glass-bg)',
+                border: `1px solid ${s.aidType === 'need-blind' ? 'rgba(74,222,128,.2)' : 'rgba(255,255,255,.07)'}`,
+                borderRadius: '10px',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                  <div>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>{s.school}</span>
+                    <span style={{ marginLeft: '8px', fontSize: '10px', padding: '2px 8px', borderRadius: '100px',
+                      background: s.aidType === 'need-blind' ? 'rgba(74,222,128,.12)' : 'rgba(251,191,36,.1)',
+                      color: s.aidType === 'need-blind' ? 'var(--green-400)' : 'var(--amber-400)' }}>
+                      {aidTypeInfo[s.aidType].label}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ textAlign: 'center', padding: '6px 12px', background: 'rgba(74,222,128,.08)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--green-400)' }}>${(s.efcLow/1000).toFixed(0)}K</div>
+                      <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>EFC 낙관</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '6px 12px', background: 'rgba(251,191,36,.06)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--amber-400)' }}>${(s.efcHigh/1000).toFixed(0)}K</div>
+                      <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>EFC 보수</div>
+                    </div>
+                    <div style={{ textAlign: 'center', padding: '6px 12px', background: 'rgba(212,175,55,.08)', borderRadius: '8px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--gold-400)' }}>${(s.netCost/1000).toFixed(0)}K</div>
+                      <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>예상 실납부</div>
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '6px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(96,165,250,.1)', color: 'var(--blue-400)' }}>
+                    📅 CSS 마감: {s.cssDeadline}
+                  </span>
+                  {s.incomeRate > 0 && (
+                    <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(167,139,250,.1)', color: 'var(--purple-400)' }}>
+                      소득 {(s.incomeRate*100).toFixed(0)}% / 자산 {(s.assetRate*100).toFixed(0)}%
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.6, padding: '8px', background: 'rgba(255,255,255,.03)', borderRadius: '7px' }}>
+                  {s.intlNeedPolicy}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 전세 설명 커버레터 가이드 */}
+          <div style={{ marginTop: '16px', padding: '14px 16px', background: 'rgba(212,175,55,.06)', border: '1px solid rgba(212,175,55,.2)', borderRadius: '12px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--gold-400)', marginBottom: '10px' }}>✍️ 전세 커버레터 핵심 포인트 (CSS 제출 시)</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+              <div>▸ <strong style={{ color: 'var(--text-primary)' }}>전세 정의:</strong> \"Jeonse is a unique Korean housing lease system where the tenant pays a large lump-sum deposit (typically 50-80% of property value) instead of monthly rent. This deposit is FULLY returnable to the tenant at lease end and is legally a liability of the property owner (us).\"</div>
+              <div>▸ <strong style={{ color: 'var(--text-primary)' }}>자산 신고 방법:</strong> CSS Section Q \"Other Debts\" → 전세보증금 합계 ₩710,000,000 (≈$546,154) 기재. 계약서 영문 번역본 첨부.</div>
+              <div>▸ <strong style={{ color: 'var(--text-primary)' }}>금융자산 설명:</strong> \"Our financial assets (stocks, gold, cash ≈$600K) represent the invested Jeonse deposits we received. Net financial assets after returning the Jeonse obligations = ~$54K.\"</div>
+              <div>▸ <strong style={{ color: 'var(--text-primary)' }}>문의 선행:</strong> 수시 원서 전 각 학교 Financial Aid Office에 이메일로 전세 처리 방법 문의 권장.</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── CSS Profile 체크리스트 탭 ── */}
       {tab === 'checklist' && (
         <div className="animate-in">
@@ -546,14 +806,15 @@ export default function Financial() {
         const debtUSD      = Math.round(debtPayKRW / KRW);
         const childUSD     = Math.round(childAssetKRW / KRW);
 
+        // 수정: cssAssetUSD 기준 (전세 차감 이미 반영)
         const optAssetBase = Math.max(0,
-          totalNetUSD
+          cssAssetUSD
           - pensionUSD
           - (excludeHouse1 ? house1NetUSD : 0)
           - debtUSD
         );
         const optAssetContrib = Math.round(optAssetBase * 0.05);
-        const optEFC          = incomeContrib + optAssetContrib;
+        const optEFC          = incomeContrib + optAssetContrib + 2_700;
         const efcSaving       = estimatedEFC - optEFC;
         const childPenaltyUSD = Math.round(childUSD * 0.15); // extra penalty vs parent rate
 
@@ -574,7 +835,7 @@ export default function Financial() {
               <div style={{ padding: '18px', background: 'rgba(251,113,133,.06)', border: '1px solid rgba(251,113,133,.2)', borderRadius: '12px', textAlign: 'center' }}>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>현재 EFC (미최적화)</div>
                 <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--rose-400)' }}>${estimatedEFC.toLocaleString()}</div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>순자산 $900K 기준 / 년</div>
+                <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>CSS자산 $354K 기준 / 년 (전세차감)</div>
               </div>
               <div style={{ padding: '18px', background: 'rgba(74,222,128,.06)', border: '1px solid rgba(74,222,128,.2)', borderRadius: '12px', textAlign: 'center' }}>
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px' }}>최적화 후 EFC</div>
