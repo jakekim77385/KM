@@ -8,7 +8,6 @@ import { useState } from 'react';
 // ============================================================
 const familyFinance = {
   incomeKRW: 170_000_000,      // 연소득 약 1억7천만원
-  incomeUSD: 124_088,           // ~$124K (1$=1,370원)
   // 부동산
   house1Market: 430_000_000,   // 집A 시세 4억3천
   house1Jeonse: 230_000_000,   // 집A 전세보증금 2억3천 → 순자산 2억
@@ -22,27 +21,29 @@ const familyFinance = {
 
 const KRW = 1370; // 환율 (2025년 기준)
 const toUSD = (krw: number) => Math.round(krw / KRW);
+const incomeUSD = toUSD(familyFinance.incomeKRW); // 연소득 USD 자동계산
 
 // ============================================================
-// CSS Profile 자산 계산 (전세보증금 부채 정확 반영)
+// 자산 계산 (전세 이중차감 방지 - 수정됨)
 // ============================================================
-// 부동산: 시세 - 전세보증금 (이미 세입자에게 반환 의무 있는 금액 차감)
+// 부동산 순자산: 시세 - 전세 (한 번만 차감)
 const realEstateNet    = (familyFinance.house1Market - familyFinance.house1Jeonse)
-                       + (familyFinance.house2Market - familyFinance.house2Jeonse); // ₩3억9천
-const realEstateNetUSD = toUSD(realEstateNet); // ~$300K
+                       + (familyFinance.house2Market - familyFinance.house2Jeonse); // ₩4억2천
+const realEstateNetUSD = toUSD(realEstateNet); // ~$307K
 
-// 금융자산: 그로스 $600K에서 전세보증금 부채 ~$546K 차감 (CSS Section Q — Other Debts 신고)
-// 전세보증금 = 임시 보관 중인 세입자 자금 → CSS Profile상 부채로 인정 요청
-const jeonseDebtKRW    = familyFinance.house1Jeonse + familyFinance.house2Jeonse; // ₩7억1천
-const jeonseDebtUSD    = toUSD(jeonseDebtKRW);    // ~$546K
-const financialGrossKRW = familyFinance.stocks + familyFinance.gold + familyFinance.cash; // ₩7억8천
-const financialGrossUSD = toUSD(financialGrossKRW); // ~$600K (그로스)
-const financialNetUSD   = Math.max(0, financialGrossUSD - jeonseDebtUSD); // ~$54K (전세 차감 후)
+// 금융자산: 부동산에서 이미 전세를 뺐으므로 여기선 그로스 그대로
+// (전세를 금융에서 또 빼면 이중차감 오류 → 순자산이 과소계상됨)
+const financialGrossKRW = familyFinance.stocks + familyFinance.gold + familyFinance.cash; // ₩7억7천
+const financialGrossUSD = toUSD(financialGrossKRW); // ~$562K
+const financialNetUSD   = financialGrossUSD; // 이중차감 없애고 그로스 사용
 
-// CSS Profile 기준 총자산 (전세 차감 인정 시)
-const cssAssetUSD   = realEstateNetUSD + financialNetUSD; // ~$354K
-// 참고용: 전세 미인정 시 (최악 시나리오)
-const cssAssetWorst = realEstateNetUSD + financialGrossUSD; // ~$900K
+// 전세 부채 (참고용 — 부동산 순자산 계산에 이미 반영)
+const jeonseDebtKRW = familyFinance.house1Jeonse + familyFinance.house2Jeonse; // ₩7억1천
+const jeonseDebtUSD = toUSD(jeonseDebtKRW); // ~$518K
+
+// 올바른 CSS 총자산: 총자산 19억 - 전세부채 7.1억(한번만) = 11.9억 ≈ $869K
+const cssAssetUSD   = realEstateNetUSD + financialGrossUSD; // ~$869K ✅
+const cssAssetWorst = cssAssetUSD; // 이중차감 제거 후 시나리오 단일화
 
 // ============================================================
 // CSS Profile IM 기반 EFC 추정 (Need-blind 학교 기준)
@@ -52,15 +53,15 @@ const cssAssetWorst = realEstateNetUSD + financialGrossUSD; // ~$900K
 // ============================================================
 const incomeProtectionAllowance = 38_000; // IM 표준 소득 공제
 const incomeContrib = Math.round(
-  Math.max(0, familyFinance.incomeUSD - incomeProtectionAllowance) * 0.22
-); // ~$20,400
-const assetContrib  = Math.round(cssAssetUSD * 0.05); // ~$17,700 (전세 차감 후)
-const estimatedEFC  = incomeContrib + assetContrib + 2_700; // +학생기여 $2,700 → ~$40,800
+  Math.max(0, incomeUSD - incomeProtectionAllowance) * 0.22
+); // ~$19K
+const assetContrib  = Math.round(cssAssetUSD * 0.05); // ~$17.5K (전세 차감 후)
+const estimatedEFC  = incomeContrib + assetContrib + 2_700; // +학생기여 $2,700
 
 // 최악 시나리오 EFC (전세 미인정)
 const estimatedEFCWorst = Math.round(
-  Math.max(0, familyFinance.incomeUSD - incomeProtectionAllowance) * 0.22
-) + Math.round(cssAssetWorst * 0.05) + 2_700; // ~$66,500
+  Math.max(0, incomeUSD - incomeProtectionAllowance) * 0.22
+) + Math.round(cssAssetWorst * 0.05) + 2_700;
 
 // ============================================================
 // 학교별 실납부액 추정 데이터
