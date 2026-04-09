@@ -2,54 +2,75 @@
 
 /* ============================================================
    꾸미의 대학 플랫폼 — Design System
-   Deep Navy + Champagne Gold + Pearl White
+   Light Theme: Cream White + Indigo/Purple Accents
    ============================================================ */
 
 :root {
-  /* Core Palette */
-  --navy-950: #04070F;
-  --navy-900: #080D1A;
-  --navy-800: #0D1426;
-  --navy-700: #121D35;
-  --navy-600: #1A2744;
-  --navy-500: #243255;
-  --navy-400: #2E3F6A;
-  --navy-300: #395080;
+  /* Core Palette — Light Backgrounds */
+  --bg-base:    #F7F6FF;
+  --bg-surface: #FFFFFF;
+  --bg-raised:  #F0EFFE;
+  --bg-subtle:  #EBE9FD;
 
-  /* Gold Accent */
-  --gold-400: #D4AF37;
-  --gold-500: #C9A732;
-  --gold-600: #B8962C;
-  --gold-glow: rgba(212, 175, 55, 0.15);
-  --gold-glow-strong: rgba(212, 175, 55, 0.3);
+  /* Indigo / Purple Accent */
+  --indigo-600: #4F46E5;
+  --indigo-500: #6366F1;
+  --indigo-400: #818CF8;
+  --indigo-300: #A5B4FC;
+  --indigo-100: #E0E7FF;
+  --indigo-50:  #EEF2FF;
 
-  /* Pearl / White */
-  --pearl-100: #FAFAF8;
-  --pearl-200: #F5F4F0;
-  --pearl-300: #EAE8E2;
-  --pearl-400: #D8D5CC;
-
-  /* Text */
-  --text-primary: #F0EEE8;
-  --text-secondary: #B8B4A8;
-  --text-muted: #7A7770;
-
-  /* Status Colors */
-  --green-400: #4ADE80;
-  --green-glow: rgba(74, 222, 128, 0.2);
-  --blue-400: #60A5FA;
-  --blue-glow: rgba(96, 165, 250, 0.2);
-  --amber-400: #FBBF24;
-  --amber-glow: rgba(251, 191, 36, 0.2);
-  --rose-400: #FB7185;
-  --rose-glow: rgba(251, 113, 133, 0.2);
+  /* Purple accent */
+  --purple-600: #7C3AED;
+  --purple-500: #8B5CF6;
   --purple-400: #A78BFA;
-  --purple-glow: rgba(167, 139, 250, 0.2);
+  --purple-100: #EDE9FE;
 
-  /* Glass */
-  --glass-bg: rgba(13, 20, 38, 0.7);
-  --glass-border: rgba(212, 175, 55, 0.15);
-  --glass-border-light: rgba(255, 255, 255, 0.08);
+  /* Keep gold for special highlights */
+  --gold-400: #D97706;
+  --gold-500: #B45309;
+  --gold-600: #92400E;
+  --gold-glow: rgba(217, 119, 6, 0.12);
+  --gold-glow-strong: rgba(217, 119, 6, 0.22);
+
+  /* Text — Dark for readability */
+  --text-primary:   #1E1B4B;
+  --text-secondary: #3730A3;
+  --text-body:      #374151;
+  --text-muted:     #6B7280;
+  --text-light:     #9CA3AF;
+
+  /* Status Colors — Vivid on light bg */
+  --green-600: #16A34A;
+  --green-400: #22C55E;
+  --green-glow: rgba(22, 163, 74, 0.12);
+  --blue-600:  #2563EB;
+  --blue-400:  #3B82F6;
+  --blue-glow: rgba(37, 99, 235, 0.12);
+  --amber-600: #D97706;
+  --amber-400: #F59E0B;
+  --amber-glow: rgba(217, 119, 6, 0.12);
+  --rose-600:  #E11D48;
+  --rose-400:  #F43F5E;
+  --rose-glow: rgba(225, 29, 72, 0.12);
+
+  /* Borders */
+  --border-light:  #E5E7EB;
+  --border-medium: #D1D5DB;
+  --border-accent: rgba(99, 102, 241, 0.25);
+
+  /* Shadows */
+  --shadow-sm:   0 1px 3px rgba(30, 27, 75, 0.08), 0 1px 2px rgba(30, 27, 75, 0.04);
+  --shadow-card: 0 4px 16px rgba(30, 27, 75, 0.08), 0 1px 4px rgba(30, 27, 75, 0.04);
+  --shadow-md:   0 8px 32px rgba(30, 27, 75, 0.10);
+  --shadow-gold: 0 0 24px rgba(217, 119, 6, 0.12);
+
+  /* Legacy aliases for component compatibility */
+  --navy-900: #1E1B4B;
+  --navy-950: #0F0D2E;
+  --glass-bg: #FFFFFF;
+  --glass-border: rgba(99, 102, 241, 0.2);
+  --glass-border-light: #E5E7EB;
 
   /* Layout */
   --sidebar-width: 260px;
@@ -58,11 +79,6 @@
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
-
-  /* Shadows */
-  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-gold: 0 0 40px rgba(212, 175, 55, 0.1);
-  --shadow-glow: 0 0 60px rgba(212, 175, 55, 0.08);
 }
 
 /* ============================================================
@@ -80,8 +96,8 @@ html {
 
 body {
   font-family: 'Inter', 'Noto Sans KR', -apple-system, sans-serif;
-  background-color: var(--navy-900);
-  color: var(--text-primary);
+  background-color: var(--bg-base);
+  color: var(--text-body);
   min-height: 100vh;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -98,15 +114,14 @@ body {
   position: relative;
 }
 
-/* Animated Background */
+/* Subtle background pattern */
 .app-layout::before {
   content: '';
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 10%, rgba(212, 175, 55, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 90%, rgba(96, 79, 175, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(13, 20, 38, 0.8) 0%, transparent 80%);
+    radial-gradient(ellipse at 15% 0%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -117,28 +132,28 @@ body {
 .sidebar {
   width: var(--sidebar-width);
   height: 100vh;
-  background: linear-gradient(180deg, var(--navy-800) 0%, var(--navy-950) 100%);
-  border-right: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5F3FF 100%);
+  border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
   top: 0;
   z-index: 100;
-  backdrop-filter: blur(20px);
+  box-shadow: 2px 0 16px rgba(30, 27, 75, 0.06);
   overflow: hidden;
 }
 
 .sidebar-logo {
   padding: 28px 24px 20px;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .sidebar-logo .logo-title {
   font-family: 'Playfair Display', serif;
   font-size: 18px;
   font-weight: 700;
-  color: var(--gold-400);
+  color: var(--indigo-600);
   letter-spacing: 0.5px;
   line-height: 1.2;
 }
@@ -157,22 +172,22 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid var(--glass-border-light);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .profile-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold-400), var(--gold-600));
+  background: linear-gradient(135deg, var(--indigo-500), var(--purple-600));
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   font-weight: 700;
-  color: var(--navy-900);
+  color: #FFFFFF;
   flex-shrink: 0;
-  box-shadow: 0 0 20px var(--gold-glow-strong);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .profile-info .profile-name {
@@ -201,7 +216,7 @@ body {
   font-weight: 600;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-light);
   padding: 8px 12px 6px;
   margin-top: 8px;
 }
@@ -212,7 +227,7 @@ body {
   gap: 10px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: var(--text-body);
   text-decoration: none;
   font-size: 13.5px;
   font-weight: 500;
@@ -226,14 +241,15 @@ body {
 }
 
 .nav-item:hover {
-  background: rgba(212, 175, 55, 0.08);
-  color: var(--text-primary);
+  background: var(--indigo-50);
+  color: var(--indigo-600);
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
-  color: var(--gold-400);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: linear-gradient(135deg, var(--indigo-100), var(--indigo-50));
+  color: var(--indigo-600);
+  border: 1px solid var(--indigo-300);
+  font-weight: 600;
 }
 
 .nav-item .nav-icon {
@@ -244,8 +260,8 @@ body {
 
 .nav-badge {
   margin-left: auto;
-  background: var(--gold-400);
-  color: var(--navy-900);
+  background: var(--indigo-500);
+  color: #FFFFFF;
   font-size: 10px;
   font-weight: 700;
   padding: 2px 7px;
@@ -256,7 +272,7 @@ body {
 
 .sidebar-footer {
   padding: 16px 24px;
-  border-top: 1px solid var(--glass-border-light);
+  border-top: 1px solid var(--border-light);
   font-size: 11px;
   color: var(--text-muted);
 }
@@ -281,9 +297,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--glass-border-light);
-  background: rgba(8, 13, 26, 0.6);
-  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-light);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -315,22 +331,22 @@ body {
    CARDS
    ============================================================ */
 .card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border-light);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-lg);
   padding: 24px;
-  backdrop-filter: blur(20px);
   box-shadow: var(--shadow-card);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card:hover {
-  border-color: var(--glass-border);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md);
 }
 
 .card-gold {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.03));
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.06), rgba(217, 119, 6, 0.02));
+  border: 1px solid rgba(217, 119, 6, 0.2);
 }
 
 .card-header {
@@ -344,6 +360,7 @@ body {
   font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.2px;
 }
 
 .card-subtitle {
@@ -372,21 +389,20 @@ body {
 }
 
 .stat-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border-light);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   padding: 20px;
   display: flex;
   align-items: flex-start;
   gap: 14px;
   transition: all 0.2s ease;
-  backdrop-filter: blur(20px);
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-gold);
-  border-color: var(--glass-border);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-accent);
 }
 
 .stat-icon {
@@ -427,14 +443,14 @@ body {
   margin-top: 4px;
 }
 
-.stat-trend.up { color: var(--green-400); }
+.stat-trend.up { color: var(--green-600); }
 .stat-trend.gold { color: var(--gold-400); }
 
 /* ============================================================
    PROGRESS BARS
    ============================================================ */
 .progress-bar-wrap {
-  background: rgba(255,255,255,0.06);
+  background: var(--bg-subtle);
   border-radius: 100px;
   height: 6px;
   overflow: hidden;
@@ -470,39 +486,39 @@ body {
 }
 
 .badge-gold {
-  background: rgba(212, 175, 55, 0.15);
-  color: var(--gold-400);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--gold-500);
+  border: 1px solid rgba(217, 119, 6, 0.25);
 }
 
 .badge-green {
-  background: var(--green-glow);
-  color: var(--green-400);
-  border: 1px solid rgba(74, 222, 128, 0.3);
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--green-600);
+  border: 1px solid rgba(22, 163, 74, 0.25);
 }
 
 .badge-blue {
-  background: var(--blue-glow);
-  color: var(--blue-400);
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--blue-600);
+  border: 1px solid rgba(37, 99, 235, 0.25);
 }
 
 .badge-rose {
-  background: var(--rose-glow);
-  color: var(--rose-400);
-  border: 1px solid rgba(251, 113, 133, 0.3);
+  background: rgba(225, 29, 72, 0.1);
+  color: var(--rose-600);
+  border: 1px solid rgba(225, 29, 72, 0.25);
 }
 
 .badge-purple {
-  background: var(--purple-glow);
-  color: var(--purple-400);
-  border: 1px solid rgba(167, 139, 250, 0.3);
+  background: var(--purple-100);
+  color: var(--purple-600);
+  border: 1px solid rgba(124, 58, 237, 0.25);
 }
 
 .badge-amber {
-  background: var(--amber-glow);
-  color: var(--amber-400);
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--amber-600);
+  border: 1px solid rgba(217, 119, 6, 0.25);
 }
 
 /* ============================================================
@@ -524,25 +540,26 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--gold-400), var(--gold-600));
-  color: var(--navy-900);
-  box-shadow: 0 4px 16px var(--gold-glow-strong);
+  background: linear-gradient(135deg, var(--indigo-500), var(--purple-600));
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px var(--gold-glow-strong);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
 }
 
 .btn-ghost {
-  background: rgba(255,255,255,0.05);
-  color: var(--text-secondary);
-  border: 1px solid var(--glass-border-light);
+  background: var(--bg-raised);
+  color: var(--text-body);
+  border: 1px solid var(--border-medium);
 }
 
 .btn-ghost:hover {
-  background: rgba(255,255,255,0.08);
-  color: var(--text-primary);
+  background: var(--indigo-50);
+  color: var(--indigo-600);
+  border-color: var(--indigo-300);
 }
 
 /* ============================================================
@@ -553,6 +570,7 @@ body {
   font-weight: 800;
   color: var(--text-primary);
   margin-bottom: 6px;
+  letter-spacing: -0.3px;
 }
 
 .section-subtitle {
@@ -563,7 +581,7 @@ body {
 
 .divider {
   height: 1px;
-  background: var(--glass-border-light);
+  background: var(--border-light);
   margin: 24px 0;
 }
 
@@ -591,19 +609,20 @@ body {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--text-muted);
-  border-bottom: 1px solid var(--glass-border-light);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-raised);
 }
 
 .data-table td {
   padding: 14px 16px;
   font-size: 13.5px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-body);
+  border-bottom: 1px solid var(--border-light);
   transition: background 0.15s;
 }
 
 .data-table tr:hover td {
-  background: rgba(212, 175, 55, 0.03);
+  background: var(--indigo-50);
   color: var(--text-primary);
 }
 
@@ -612,31 +631,31 @@ body {
    ============================================================ */
 .form-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--glass-border-light);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   color: var(--text-primary);
   font-size: 13.5px;
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-input:focus {
-  border-color: rgba(212, 175, 55, 0.4);
-  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--indigo-400);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .form-input::placeholder {
-  color: var(--text-muted);
+  color: var(--text-light);
 }
 
 .form-label {
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: var(--text-body);
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -662,8 +681,7 @@ textarea.form-input {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(180deg, var(--gold-400), transparent);
-  opacity: 0.3;
+  background: linear-gradient(180deg, var(--indigo-400), var(--border-light));
 }
 
 .timeline-item {
@@ -679,24 +697,24 @@ textarea.form-input {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--gold-400);
-  box-shadow: 0 0 10px var(--gold-glow-strong);
+  background: var(--indigo-500);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.35);
 }
 
 .timeline-item.completed::before {
-  background: var(--green-400);
-  box-shadow: 0 0 10px var(--green-glow);
+  background: var(--green-600);
+  box-shadow: 0 0 8px rgba(22, 163, 74, 0.3);
 }
 
 .timeline-item.upcoming::before {
-  background: var(--navy-400);
-  border: 2px solid var(--text-muted);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-medium);
   box-shadow: none;
 }
 
 .timeline-date {
   font-size: 11px;
-  color: var(--gold-400);
+  color: var(--indigo-500);
   font-weight: 600;
   margin-bottom: 4px;
   text-transform: uppercase;
@@ -705,7 +723,7 @@ textarea.form-input {
 
 .timeline-content {
   font-size: 13.5px;
-  color: var(--text-secondary);
+  color: var(--text-body);
 }
 
 .timeline-title {
@@ -726,7 +744,7 @@ textarea.form-input {
 .score-value {
   font-size: 36px;
   font-weight: 900;
-  color: var(--gold-400);
+  color: var(--indigo-600);
   line-height: 1;
   letter-spacing: -1px;
 }
@@ -749,35 +767,37 @@ textarea.form-input {
    COLLEGE CARD
    ============================================================ */
 .college-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border-light);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   padding: 18px;
   transition: all 0.25s ease;
-  backdrop-filter: blur(20px);
 }
 
 .college-card:hover {
   transform: translateY(-3px);
-  border-color: var(--glass-border);
-  box-shadow: var(--shadow-gold);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md);
 }
 
 .college-card.dream {
-  border-color: rgba(212, 175, 55, 0.3);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.07), var(--glass-bg));
+  border-color: rgba(217, 119, 6, 0.3);
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.05), var(--bg-surface));
 }
 
 .college-card.reach {
-  border-color: rgba(251, 113, 133, 0.2);
+  border-color: rgba(225, 29, 72, 0.2);
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.03), var(--bg-surface));
 }
 
 .college-card.match {
-  border-color: rgba(96, 165, 250, 0.2);
+  border-color: rgba(37, 99, 235, 0.2);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.03), var(--bg-surface));
 }
 
 .college-card.safety {
-  border-color: rgba(74, 222, 128, 0.2);
+  border-color: rgba(22, 163, 74, 0.2);
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.03), var(--bg-surface));
 }
 
 .college-rank {
@@ -795,7 +815,7 @@ textarea.form-input {
 
 .college-location {
   font-size: 12px;
-  color: var(--text-muted);
+  color: var(--text-body);
 }
 
 .college-stats {
@@ -830,7 +850,7 @@ textarea.form-input {
   align-items: flex-start;
   gap: 12px;
   padding: 12px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .checklist-item:last-child {
@@ -841,7 +861,7 @@ textarea.form-input {
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  border: 2px solid var(--text-muted);
+  border: 2px solid var(--border-medium);
   flex-shrink: 0;
   margin-top: 2px;
   display: flex;
@@ -852,15 +872,15 @@ textarea.form-input {
 }
 
 .check-box.checked {
-  background: var(--green-400);
-  border-color: var(--green-400);
-  color: var(--navy-900);
+  background: var(--green-600);
+  border-color: var(--green-600);
+  color: #FFFFFF;
   font-size: 11px;
 }
 
 .check-text {
   font-size: 13.5px;
-  color: var(--text-secondary);
+  color: var(--text-body);
   line-height: 1.5;
 }
 
@@ -873,8 +893,8 @@ textarea.form-input {
    D-DAY COUNTDOWN
    ============================================================ */
 .dday-card {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.04));
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(135deg, var(--indigo-100), var(--indigo-50));
+  border: 1px solid var(--indigo-300);
   border-radius: var(--radius-lg);
   padding: 24px;
   text-align: center;
@@ -883,7 +903,7 @@ textarea.form-input {
 .dday-number {
   font-size: 52px;
   font-weight: 900;
-  color: var(--gold-400);
+  color: var(--indigo-600);
   line-height: 1;
   letter-spacing: -2px;
 }
@@ -905,11 +925,12 @@ textarea.form-input {
    ESSAY CARD
    ============================================================ */
 .essay-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border-light);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   padding: 18px;
   transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
 }
 
 .essay-progress-label {
@@ -927,23 +948,23 @@ textarea.form-input {
 }
 
 .essay-status.not-started {
-  background: rgba(255,255,255,0.05);
+  background: var(--bg-subtle);
   color: var(--text-muted);
 }
 
 .essay-status.drafting {
-  background: var(--amber-glow);
-  color: var(--amber-400);
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--amber-600);
 }
 
 .essay-status.revision {
-  background: var(--blue-glow);
-  color: var(--blue-400);
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--blue-600);
 }
 
 .essay-status.final {
-  background: var(--green-glow);
-  color: var(--green-400);
+  background: rgba(22, 163, 74, 0.1);
+  color: var(--green-600);
 }
 
 /* ============================================================
@@ -1009,12 +1030,12 @@ textarea.form-input {
 .mb-20 { margin-bottom: 20px; }
 .mb-24 { margin-bottom: 24px; }
 .font-bold { font-weight: 700; }
-.text-gold { color: var(--gold-400); }
-.text-green { color: var(--green-400); }
-.text-blue { color: var(--blue-400); }
-.text-rose { color: var(--rose-400); }
-.text-purple { color: var(--purple-400); }
-.text-amber { color: var(--amber-400); }
+.text-gold { color: var(--gold-500); }
+.text-green { color: var(--green-600); }
+.text-blue { color: var(--blue-600); }
+.text-rose { color: var(--rose-600); }
+.text-purple { color: var(--purple-600); }
+.text-amber { color: var(--amber-600); }
 .text-muted { color: var(--text-muted); }
 .text-primary { color: var(--text-primary); }
 .text-sm { font-size: 12px; }

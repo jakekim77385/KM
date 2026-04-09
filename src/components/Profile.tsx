@@ -8,6 +8,35 @@ const apCourses = [
   { grades: '11학년', courses: ['AP English Language', 'AP Calculus BC', 'AP Physics 1', 'AP Chemistry', 'Panama Civics & History', 'Spanish 5'] },
 ];
 
+const apScores = [
+  {
+    year: '2024년 5월',
+    note: '9학년',
+    exams: [
+      { subject: 'AP Human Geography', score: 5 },
+    ],
+  },
+  {
+    year: '2025년 5월',
+    note: '10학년',
+    exams: [
+      { subject: 'AP Pre-Calculus', score: 5 },
+      { subject: 'AP Calculus AB', score: 4 },
+      { subject: 'AP World History: Modern', score: 4 },
+    ],
+  },
+  {
+    year: '2026년 5월',
+    note: '11학년 — 응시 예정',
+    exams: [
+      { subject: 'AP Chemistry', score: null },
+      { subject: 'AP Physics 1', score: null },
+      { subject: 'AP English Language', score: null },
+      { subject: 'AP Calculus BC', score: null },
+    ],
+  },
+];
+
 const activities = [
   {
     icon: '🔢', name: 'The Mathletic Society', role: '부회장 (Vice President)',
@@ -185,9 +214,6 @@ export default function Profile() {
               }}>
                 <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>PSAT/NMSQT</div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>2025년 10월 15일 응시 · 결과 확인 중</div>
-                <div style={{ marginTop: '8px' }}>
-                  <span className="badge badge-amber">National Merit Scholar 후보 가능성 ⭐</span>
-                </div>
               </div>
             </div>
 
@@ -257,6 +283,44 @@ export default function Profile() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AP 시험 성적 */}
+      {activeTab === 'academic' && (
+        <div className="card" style={{ marginTop: '20px' }}>
+          <div className="card-title" style={{ marginBottom: '16px' }}>🏅 AP 시험 성적</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {apScores.map((group, gi) => (
+              <div key={gi} style={{
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: '12px', padding: '16px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--gold-400)' }}>{group.year}</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '100px' }}>{group.note}</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {group.exams.map((exam, ei) => {
+                    const scoreColor = exam.score === 5 ? '#22C55E' : exam.score === 4 ? '#3B82F6' : exam.score === 3 ? '#F59E0B' : '#6B7280';
+                    const scoreBg = exam.score === 5 ? 'rgba(34,197,94,0.12)' : exam.score === 4 ? 'rgba(59,130,246,0.12)' : exam.score === 3 ? 'rgba(245,158,11,0.12)' : 'rgba(107,114,128,0.08)';
+                    return (
+                      <div key={ei} style={{
+                        background: scoreBg, border: `1px solid ${scoreColor}33`,
+                        borderRadius: '10px', padding: '10px 14px',
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                      }}>
+                        <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{exam.subject}</span>
+                        <span style={{ fontSize: '20px', fontWeight: 900, color: scoreColor }}>{exam.score ?? '—'}</span>
+                        {exam.score === 5 && <span style={{ fontSize: '13px' }}>⭐</span>}
+                        {exam.score === null && <span style={{ fontSize: '10px', color: '#6B7280' }}>응시 예정</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
