@@ -2,11 +2,17 @@
 
 import { useState } from 'react';
 
-type Tab = 'original' | 'intl';
+type Tab = 'original' | 'intl' | 'cds';
 
 // ────────────────────────────────────────────────
 //  학교 상세 정보 DB
 // ────────────────────────────────────────────────
+type EvalCriterion = {
+  label: string;   // e.g., "에세이"
+  weight: '핵심' | '높음' | '중간' | '참고';  // importance
+  note: string;    // 한 줄 설명
+};
+
 type SchoolDetail = {
   fullName: string;
   location: string;
@@ -37,6 +43,7 @@ type SchoolDetail = {
   kkumiNote: string;
   panamaNote: string;  // 파나마 국제학교 출신 포지셔닝 분석
   chemNote: string;   // 화학 관련 정보
+  evalCriteria: EvalCriterion[];  // 사정관이 중점적으로 보는 평가 기준
 };
 
 
@@ -70,6 +77,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'SAT 1570 + 수학 800 만점은 MIT 지원자 평균 수준. 국제학생 Need-Blind라 재정지원 가능. 단 ED 없이 RD만 운영하므로 조기지원 이점 없음. Pre-Med보다 공학·STEM 스탬프가 강한 학교.',
     panamaNote: '📍 평가 담당: 라틴아메리카 지역 사정관 — 한국 고교생과 완전히 다른 풀. 파나마 → MIT 지원자는 연간 극소수(사실상 0~2명 수준)라 지역 희소성이 실질적 플러스 요소. 한국 국적이지만 파나마 국제학교 재학을 통해 "한국 학생 클러스터" 부담에서 벗어남 — 이것이 핵심 전략적 강점. 단, 한국 국적이므로 CSS Profile 재정지원 계산은 한국 가정 기준 그대로 적용. MIT 에세이에서 파나마 다문화 경험을 녹이면 강력한 차별화 가능.',
     chemNote: '🏆 세계 Top3 화학과. Nobel 수상자 교수진이 직접 강의. 생화학(5.07), 유기화학(5.12) 코스는 전미 최고 수준의 깊이를 자랑함. 꾸미처럼 화학을 좋아한다면 연구 기회가 무한하며 Premed-Chemistry 연계가 탄탄함. 단, 내부 경쟁이 극심해 학점 관리가 도전적.',
+    evalCriteria: [
+      { label: 'STEM 실력', weight: '핵심', note: '수학·과학 성취가 압도적이어야 함. 수학 800점은 기본 기대치' },
+      { label: '연구 경험', weight: '핵심', note: '실제 연구 프로젝트·수상·발명 경험이 큰 차별화 요소' },
+      { label: '에세이', weight: '높음', note: '창의적 문제해결 방식과 지적 호기심을 보여야 함' },
+      { label: 'GPA / 학업 성취', weight: '높음', note: '최상위 성적 필수. AP·IB 고급 과목 이수 중요' },
+      { label: '과외활동', weight: '중간', note: '깊이 있는 STEM 관련 활동 (올림피아드, 경시대회, 연구 인턴십 등)' },
+      { label: '추천서', weight: '중간', note: '수학·과학 교사의 강력한 학문적 추천서 요구' },
+    ],
   },
   'Caltech': {
     fullName: 'California Institute of Technology',
@@ -100,6 +115,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '꾸미의 SAT 수학 800점 만점은 여기선 기본 수준. Pre-Med 목표와 방향이 다소 다름. 국제학생 Need-Aware라 재정지원 보장 안 됨. 연구에 관심 있다면 지원해볼 수 있지만 우선순위는 낮음.',
     panamaNote: '📍 평가 담당: 라틴아메리카 지역 사정관으로 한국 고교 지원자와 다른 풀. 단, Caltech은 연간 신입생 ~235명의 초소규모라 라틴아메리카 지역 전체 합격자 수 자체가 극히 제한적. 지역 희소성 효과는 존재하지만 MIT·Stanford 대비 약함. Caltech 합격의 80%는 STEM 실력 그 자체 — 파나마 배경보다 수학 능력·연구 경험 입증이 절대 우선. 파나마 효과: 보통 수준.',
     chemNote: '💎 세계 최정상 화학과 (글로벌 Top3). Linus Pauling(화학결합 이론, 2회 Nobel 수상)의 학교. 학부생이 교수와 1:1 연구를 하는 문화가 정착되어 있어 화학 좋아하는 학생에겐 천국. 분자생물학·계산화학 분야 독보적. 단, Pre-Med 화학으로 접근하기보단 순수 화학 연구자 양성에 초점이 맞춰져 있음.',
+    evalCriteria: [
+      { label: 'STEM 순수 실력', weight: '핵심', note: '수학·물리 성취가 압도적이어야 함. 수학 800 거의 필수' },
+      { label: '연구 경험', weight: '핵심', note: '실험실 연구·발명·학술 출판 경험이 결정적 차별화 요소' },
+      { label: 'GPA', weight: '높음', note: '최상위 이공계 성적. AP 물리·화학·수학 BC 만점 기대' },
+      { label: '에세이', weight: '중간', note: '지적 열정과 과학적 사고 방식을 보여야 함' },
+      { label: '추천서', weight: '중간', note: '수학·과학 교사의 학문적 능력 증명 추천서' },
+      { label: '다양성', weight: '참고', note: '소규모(235명)라 다양성 고려하지만 STEM 실력이 절대 우선' },
+    ],
   },
   'Stanford': {
     fullName: 'Stanford University',
@@ -130,6 +153,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Pre-Med 목표에 완벽한 환경. 단, REA(제한적 조기전형)라 지원 시 다른 사립 EA/ED 동시 지원 불가. 국제학생 Need-Aware이지만 재정지원 매우 후함. 꾸미 스펙으로 최상위 Dream 학교.',
     panamaNote: '📍 파나마 효과 최상급 ★★★. Stanford는 세 학교 중 지역 다양성을 가장 적극적으로 가치 있게 봄. 라틴아메리카 지역 사정관 평가 + Stanford만의 "다양한 삶의 경험" 중시 철학이 꾸미 프로필과 강하게 맞닿음. 파나마 한인 정체성·다문화 환경·국제학교 경험은 REA 에세이의 매우 강력한 소재. "한국 학생 경쟁" 부담 없이 중미·카리브 지역에서 매우 특별한 지원자로 포지셔닝 가능. 단, REA 조기 지원 여부 결정이 2025년 하반기 핵심 전략 분기점.',
     chemNote: '⭐ Stanford 화학과는 Chemical Biology (화학+생물 융합) 분야 세계 1위 수준. Stanford Medical School과 직접 연결되어 의학-화학 인터페이스 연구가 활발함. 꾸미처럼 화학+Pre-Med 조합을 원한다면 최적의 환경. Biochemistry, Organic Chemistry 강의 수준 최상. 학부 연구(SURF 프로그램) 통해 실제 연구 참여 가능.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: '삶의 서사·다양성·자신만의 관점. "What matters most to you and why?"' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 어려운 과목(AP/IB) 선택이 중요' },
+      { label: '리더십·임팩트', weight: '높음', note: '커뮤니티에 실질적 변화를 만든 리더십 증거 요구' },
+      { label: '과외활동', weight: '높음', note: '넓게보다 깊게. 한두 가지에서 탁월한 성과를 낸 증거' },
+      { label: '추천서', weight: '중간', note: '담임·교과목 교사 모두에서 인격·학업 능력 보증' },
+      { label: '인터뷰', weight: '중간', note: '동문(alumni) 인터뷰 — 인성·호기심·커뮤니케이션 평가' },
+    ],
   },
 
   'Yale': {
@@ -162,6 +193,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '국제학생 Need-Blind + REA 조기전형 = 꾸미에게 재정지원 + 조기합격 두 마리 토끼 가능. Pre-Med 환경 최상, 에세이 중시 학교라 파나마 다문화 스토리가 강점이 됨. 세 Ivy 중 가장 인문학적 감수성을 중시.',
     panamaNote: '📍 국제학생 Need-Blind → 파나마 출신이어도 재정지원 걱정 없음. 라틴아메리카 지역 사정관 평가. Yale은 다양한 삶의 배경·서사를 에세이에서 매우 중시하는 학교 — 파나마 한인 스토리가 강력한 소재. 파나마 → Yale 지원자는 연간 극히 드물어 희소성 효과 있음. REA 지원 권장 (조기 합격률 > RD).',
     chemNote: '🔷 Yale 화학과 전국 Top 10. 특히 생물의학 화학(Biomedical Chemistry)·합성화학 연구 활발. Yale SOM(의대)과 연계해 의학-화학 인터페이스 연구 기회 풍부. Pre-Med 화학 트랙 탁월. Nobel 수상자 출신 교수진 다수. 학부 연구 참여(Bass Fellowship 등) 적극 지원.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: '인문학적 감수성과 Yale 커뮤니티 기여를 보여야 함. Why Yale? 중요' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적. AP·IB 도전적 과목 이수가 중요' },
+      { label: '과외활동', weight: '높음', note: '예술·음악·스포츠 등 Yale은 전인격적 활동 매우 중시' },
+      { label: '추천서', weight: '높음', note: '교사 2명 + 카운슬러 추천서. 인격 및 지적 성장 서술 핵심' },
+      { label: '다양성', weight: '높음', note: '독특한 배경·경험·시각이 Yale 커뮤니티에 기여하는 점' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰 실시. Yale에 대한 진정한 관심 표현 필요' },
+    ],
   },
 
   'Harvard': {
@@ -194,6 +233,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '세계 최고 인지도 + 국제학생 Need-Blind + Pre-Med 최강 3박자. REA 지원 시 조기 합격 발표(12월). 꾸미 SAT 1570은 합격자 중간 수준. 단 내부 경쟁 매우 치열하고 학점 관리가 도전적. Harvard Medical School 파이프라인은 실질적 장점.',
     panamaNote: '📍 국제학생 Need-Blind → 파나마 출신 재정지원 안심. 라틴아메리카 지역 담당 사정관 평가. Harvard는 매년 파나마에서 학생 선발이 극소수 → 지역 희소성 효과 명확. REA 지원 시 파나마 국제학교 출신이라는 독특한 프로필이 더욱 부각됨. 재정지원 최대화를 원한다면 Harvard REA는 강력한 선택지.',
     chemNote: '⚗️ Harvard 화학과 전국 Top 5. 화학생물학(Chemical Biology)·합성생물학 연구 세계적 수준. Biochemical Sciences 학위 과정에서 Pre-Med + 화학 시너지 최고. 학부 연구 참여(HURO 프로그램) 적극 지원. MIT와 인접해 공동 연구·강의 교류도 가능.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. AP 5점 다수, Valedictorian급 기대' },
+      { label: '에세이', weight: '핵심', note: '개인 서사와 지적 호기심. 단순 성취 나열 X, 스토리텔링 필수' },
+      { label: '과외활동·임팩트', weight: '핵심', note: '주·국가·국제 수준의 리더십 또는 업적이 있어야 함' },
+      { label: '추천서', weight: '높음', note: '교사 추천서 품질이 매우 중요. 탁월함을 구체적 사례로 증명' },
+      { label: '인터뷰', weight: '높음', note: '동문 인터뷰 필수. 지적 호기심·인성·하버드 적합성 평가' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 등 지역 다양성, 1세대 이민자 배경 고려' },
+    ],
   },
 
   'Princeton': {
@@ -226,6 +273,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '세 Ivy 중 학부생 교육 가장 집중 (대학원 상대적으로 작음). 국제학생 Need-Blind + Ivy 중 재정지원 가장 후함. 학부 연구 의무(Thesis)로 의대 지원용 연구 경험 확보 유리. 단 Princeton 자체엔 의대 없어 졸업 후 타 의대 진학해야 함.',
     panamaNote: '📍 국제학생 Need-Blind + Ivy 중 재정지원 최고 수준 → 파나마 출신 꾸미에게 재정 측면 최적. Princeton은 학부 규모가 작아 국제학생 지역 다양성을 더욱 중시. 파나마 출신 Princeton 지원자는 사실상 매우 드문 케이스 → 희소성 극대화 가능. 라틴아메리카 사정관 평가. Princeton도 REA 조기 지원 권장.',
     chemNote: '🔬 Princeton 화학과 전국 Top 10. 이론화학·계산화학 분야 세계적 수준. Molecular Biology과의 연계 강의 풍부해 Pre-Med 화학 트랙 탁월. 학부 Junior Paper + Senior Thesis 의무 과정에서 실질적 연구 경험 축적 가능. 꾸미의 화학 관심 + Pre-Med 목표에 Princeton 연구 문화가 잘 맞음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '학업이 최우선. AP·IB 최상위 성적. 도전적 커리큘럼 필수' },
+      { label: '에세이', weight: '핵심', note: '"Your voice" 중시. Princeton만을 위한 Why Princeton? 에세이 매우 중요' },
+      { label: 'SAT/ACT', weight: '높음', note: 'Princeton은 시험 점수를 중요하게 봄. 1550+ 글로벌 풀 기대' },
+      { label: '추천서', weight: '높음', note: '교사 2명 + 카운슬러. 학문적 탁월함을 구체적으로 서술해야 함' },
+      { label: '과외활동', weight: '높음', note: '연구·창작·리더십에서 실질적 성과. 학부 Thesis 의무와 연계' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰 실시. Princeton 커뮤니티 기여 의지 표현 필요' },
+    ],
   },
 
   'Columbia': {
@@ -258,6 +313,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'NYC 위치로 COA ~$90,000 — 6개교 중 생활비 가장 높음. Need-Aware(국제학생)라 재정지원 불확실. 최근 합격률 급락(~4%)으로 실질 난이도 상승. 단 NYC 의료·연구 환경은 Pre-Med에 세계 최고 수준. ED 지원 시 합격률 소폭 상승.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정지원 불확실, Ivy 중 재정 리스크 가장 큰 학교. 라틴아메리카 사정관 평가. NYC의 히스패닉·라틴아메리카 커뮤니티 문화와 파나마 배경이 잘 연결됨. ED 지원 시 합격 가능성 소폭 유리. 파나마 → Columbia 지원자 역시 극소수 → 희소성 효과 존재.',
     chemNote: '🗽 Columbia 화학과 전국 Top 10. NYC라는 위치 덕분에 Columbia Medical Center·Memorial Sloan Kettering(암연구 세계 1위)·Rockefeller University 등 주변 세계 최고 연구기관 직접 접근 가능. 화학+생의학 연구 인턴십 기회 독보적. 도시에서 연구하고 싶다면 여기가 최적.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. Core Curriculum 이수 의지도 평가 요소' },
+      { label: 'Why Columbia 에세이', weight: '핵심', note: 'NYC 도시 환경 활용 계획과 Columbia 특정 교육 철학 언급 필수' },
+      { label: 'SAT/ACT', weight: '높음', note: '1550+ 기대. 국제학생 경쟁풀에서도 상위권 필요' },
+      { label: '과외활동', weight: '높음', note: 'NYC 기반 활동·인턴십·리더십 경험이 Columbia와 궁합 좋음' },
+      { label: '추천서', weight: '중간', note: '교사·카운슬러 추천서. 학업 능력과 저변을 보여야 함' },
+      { label: '다양성', weight: '중간', note: 'Columbia는 NYC 다양성을 강하게 중시함' },
+    ],
   },
 
   'U of Chicago': {
@@ -290,6 +353,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '"Why UChicago" 에세이가 매우 중요한 학교 — 단순 성적보다 지적 호기심·분석 능력 평가 중시. Core Curriculum이 강력해 Pre-Med 학점 관리 도전적. Need-Aware(국제학생)라 재정지원 불확실. REA 조기 지원 가능. 화학을 깊이 공부하고 싶다면 매력적.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정지원 불확실. 라틴아메리카 사정관 평가. UChicago는 독특한 에세이 질문으로 유명 — 파나마 한인이라는 독특한 관점과 지적 서사가 강점. REA 지원 전략 고려. Chicago 도시 자체의 히스패닉 커뮤니티 문화 + 파나마 배경의 접점.',
     chemNote: '⚗️ UChicago 화학과 전국 Top 5 — Nobel 수상자 다수 배출 (역사적으로 화학·물리화학 세계 최정상). Chicago는 방사성 원소 최초 원자력 반응(맨해튼 프로젝트)의 발상지. 단, 학교 분위기가 매우 이론적이라 Pro-Med 실용 화학보다 순수 화학 연구에 무게. 화학 자체를 열정적으로 공부하고 싶은 학생에게 최상.',
+    evalCriteria: [
+      { label: '에세이·지적 호기심', weight: '핵심', note: '독특한 UChicago 에세이("Extended Essay")가 핵심. 창의적·철학적 사고 요구' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '이론 중심 커리큘럼에 맞는 학문적 깊이 필요. 도전적 과목 이수' },
+      { label: '추천서', weight: '높음', note: '지적 성장을 잘 아는 교사 추천서. "이 학생을 왜 사랑하나요?" 수준의 서술' },
+      { label: '과외활동', weight: '중간', note: '학문적 클럽·연구·토론 등 지적 활동 선호' },
+      { label: 'SAT/ACT', weight: '중간', note: '점수보다 에세이 비중이 높은 학교지만 1520+ 권장' },
+      { label: 'Why UChicago', weight: '핵심', note: 'Core Curriculum·교수진·특정 프로그램에 대한 구체적 이유 필수' },
+    ],
   },
 
   'Brown': {
@@ -322,6 +393,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '꾸미 Pre-Med 목표 기준 최우선 고려 학교. PLME 합격 시 의대 보장 + MCAT 불필요. 국제학생 Need-Blind라 재정 걱정 없음. Open Curriculum으로 화학+Bio 자유 조합 가능. ED 지원 + PLME 동시 지원 전략 필요. ⚠️ 단, 한국 국적 유지 시 8년 후 의대 입학 시점 국적 제약 확인 필수. 2026 지원의 핵심 카드 중 하나!',
     panamaNote: '📍 Need-Blind(국제학생) → 파나마 출신 재정지원 안심. ED 지원 시 합격 가능성 유리. Brown Open Curriculum 철학이 다양한 배경 학생을 환영하는 문화 — 파나마 한인 스토리와 매우 잘 맞음. PLME 인터뷰 있음 — 파나마에서의 의료 경험·관찰 스토리가 강력한 소재. 라틴아메리카 사정관 평가.',
     chemNote: '🏥 Brown 화학과는 Pre-Med 화학 연계 최상. PLME 학생들의 화학+의학 경로 잘 구축. 특히 생화학(Biochemistry)·약학 화학 분야 연구 활발. Open Curriculum 덕분에 화학 + 의대 프리트랙을 자유롭게 조합 가능. 꾸미처럼 화학 좋아하는 Pre-Med 학생에게 PLME 내 화학 전공 경로는 최상의 조합.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: 'Brown의 Open Curriculum 철학에 대한 이해와 자기주도 학습 계획 필수' },
+      { label: '과외활동·열정', weight: '핵심', note: '한 분야에 대한 깊은 관심과 열정이 있는 "spike" 지원자 선호' },
+      { label: 'GPA / 학업성취', weight: '높음', note: '최상위 성적 필수. 도전적 과목 선택이 중요' },
+      { label: '추천서', weight: '높음', note: '교사 추천서가 개인 성격과 학문적 열정을 잘 표현해야 함' },
+      { label: '다양성', weight: '높음', note: 'Brown은 다양한 배경·사고방식을 가진 학생을 매우 강하게 선호' },
+      { label: 'PLME 전형', weight: '핵심', note: '(PLME 지원 시) 별도 에세이+인터뷰. 의학적 관심과 인성 평가' },
+    ],
   },
 
   'Dartmouth': {
@@ -354,6 +433,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Ivy 중 가장 소규모(학부 ~4,500명). 국제학생 Need-Blind라 재정 안심. Geisel Medical School 동일 캠퍼스 Pre-Med 파이프라인. 단 뉴햄프셔 시골 위치 — 도시 선호 학생에게는 다소 제한적. ED 조기 지원 전략.',
     panamaNote: '📍 Need-Blind(국제학생) → 재정 안심. 라틴아메리카 사정관 평가. Ivy 중 가장 작은 커뮤니티 — 지역 다양성을 더욱 중시. 파나마 출신 Dartmouth 지원자는 극소수 → 희소성 효과 강함. 소규모 캠퍼스 문화와 파나마 한인 정체성이 독특한 스토리 구성에 유리.',
     chemNote: '🌲 Dartmouth 화학과는 전국 중상위권. 소규모 학교라 학부생-교수 1:1 연구 기회가 탁월. Geisel Medical School 연계 생화학·생의학 화학 연구 가능. Pre-Med 화학 환경 우수하지만 대형 연구 인프라는 MIT·Stanford 대비 제한적. 조용한 환경에서 집중적으로 연구에 몰입하고 싶은 학생에게 적합.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: 'Dartmouth 커뮤니티 기여와 야외활동 문화 등 "Dartmouth 사람"되기 어필 필요' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적. AP·IB 도전적 과목. 소규모 강의 환경에 맞는 학업 깊이' },
+      { label: '과외활동', weight: '높음', note: '특정 분야 깊이 있는 활동. 리더십·계절 스포츠·아웃도어 활동 호응 좋음' },
+      { label: '추천서', weight: '높음', note: '소규모 학교라 추천서 품질이 합격에 미치는 영향 큼' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰. Dartmouth 문화 fit과 커뮤니티 기여 의지 평가' },
+      { label: '다양성', weight: '중간', note: '소규모라 지역 다양성(파나마 등 희소 지역) 가중치 있음' },
+    ],
   },
 
   'UPenn': {
@@ -386,6 +473,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Perelman 의대 동일 캠퍼스 → Pre-Med 최상 환경. Wharton(경영)+Engineering+의대 Pre-Med 복합 강점. Need-Aware(국제학생)라 재정 주의 필요. ED 지원 시 합격 가능성 소폭 상승. Philadelphia 생활비는 NYC보다 현저히 저렴.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정지원 불확실. ED 지원 추천. 라틴아메리카 사정관 평가. Philadelphia의 다양한 히스패닉 커뮤니티 문화와 파나마 배경이 맥락적으로 연결됨. 파나마 → UPenn 지원자 극소수 → 희소성 효과. Penn의 글로벌 Health 프로그램과 파나마 의료 관심 연결 가능.',
     chemNote: '🔱 Penn 화학과 전국 Top 10. Perelman School of Medicine과의 연계로 Pre-Med 화학 트랙 탁월. 화학생물학(Chemical Biology)·생화학 분야 강함. 특히 Philadelphia 지역 제약산업(GlaxoSmithKline, Merck 등) 인접으로 화학 관련 인턴십 기회 풍부. 꾸미처럼 화학+의학 꿈이 있다면 Penn 화학과 Pre-Med 트랙이 실용적 강점.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. Penn의 전문적 학문 트랙(Wharton 등)에 맞는 성적' },
+      { label: 'Why Penn 에세이', weight: '핵심', note: '특정 칼리지(Wharton·CAS·Engineering·Nursing)와 맞는 구체적 이유 필수' },
+      { label: '과외활동·리더십', weight: '높음', note: '실용적 성과를 낸 리더십. Penn은 실용주의적 성취를 높이 평가' },
+      { label: 'SAT/ACT', weight: '높음', note: '1550+ 기대. 국제학생 경쟁풀에서 상위권 필수' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학업 능력과 실용적 성취 서술' },
+      { label: 'Pre-Med 관련 활동', weight: '높음', note: '(Pre-Med 지원 시) 병원 봉사·연구·의학 노출 경험 중요' },
+    ],
   },
 
   'Cornell': {
@@ -418,6 +513,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '상 2 중 합격률 가장 높음(~7%) — 현실적 Target 학교로 포지셔닝. Weill Cornell Medical(NYC) 연계 Pre-Med 파이프라인. 다양한 칼리지 구조 → Pre-Med면 College of Arts & Sciences(CAS) 지원 추천. Need-Aware(국제학생) 주의.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. 라틴아메리카 사정관 평가. 파나마 → Cornell 지원자 극소수 → 희소성 효과. Cornell은 다양한 학부대학 구조라 지원 전략 선택 중요 — Pre-Med면 CAS, 환경보건이면 CALS 고려.',
     chemNote: '🌁 Cornell 화학과 전국 Top 10 수준. 유기화학·재료화학 분야 강하고 Nobel 수상자 출신 교수진. Weill Cornell Medical College(NYC)와 연계한 생화학·분자생물학 연구 파이프라인. 학부생 연구 참여 기회 풍부. 이타카의 조용한 환경에서 화학에 집중할 수 있는 최적 조건.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '각 칼리지별 요구 성적 다름. CAS(Pre-Med)는 최상위권 요구' },
+      { label: 'Why Cornell 에세이', weight: '핵심', note: '지원 칼리지에 맞는 구체적 이유 필수. 칼리지 선택이 전략의 핵심' },
+      { label: '과외활동', weight: '높음', note: '연구·인턴십·리더십·봉사 등 다양한 분야에서 실질적 성과' },
+      { label: '추천서', weight: '높음', note: '교사 추천서. 이타카 환경에 적응할 수 있는 독립심과 학문성 표현' },
+      { label: 'SAT/ACT', weight: '중간', note: '선택 제출이지만 제출 시 1520+ 권장. 수학 성취도 중요' },
+      { label: '다양성', weight: '중간', note: '파나마 배경 같은 지역 희소성은 CAS 심사에서 긍정적 요소' },
+    ],
   },
 
   'Johns Hopkins': {
@@ -450,6 +553,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Pre-Med 목표라면 JHU를 빼놓을 수 없음. 세계 1위 병원 바로 옆 캠퍼스. 생물의학 연구 환경 독보적. 단 내부 경쟁 극심 — Pre-Med 학점 관리가 6개교 중 가장 도전적. Need-Aware(국제학생) 재정 주의. SAT 1570은 JHU 합격자 평균 수준.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정지원 불확실. 라틴아메리카 사정관 평가. JHU Pre-Med 지원자로서 파나마 의료 경험(클리닉 방문, 공중보건 관찰 등) 스토리가 매우 강력한 에세이 소재. 파나마 → JHU 지원자 극소수 → 희소성 효과. JHU의 글로벌 보건(Global Health) 프로그램과 중미 배경 연결 가능.',
     chemNote: '🏆 JHU 화학과 Pre-Med 화학 연계 전국 최강. Krieger School의 Chemistry + Bloomberg Public Health + Hopkins Hospital 삼각 연계는 세계 어디에도 없는 조합. Pre-Med 필수 과목(Gen Chem → Orgo → Biochem) 커리큘럼 완성도 세계 최고 수준. 꾸미처럼 화학 좋아하고 의사가 꿈이라면 JHU 화학 Pre-Med 트랙은 최고의 선택. 단 경쟁 매우 치열.',
+    evalCriteria: [
+      { label: '연구 경험', weight: '핵심', note: '연구소 인턴십·학술 출판·과학 경시대회 수상이 매우 강력한 자산' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: 'Pre-Med 최강 학교답게 최상위 이과 성적 필수. 화학·생물 만점 기대' },
+      { label: 'Pre-Med 헌신', weight: '핵심', note: '의학 관심을 보여주는 병원 봉사·쉐도잉·의료 관련 활동 필수' },
+      { label: '에세이', weight: '높음', note: 'JHU 연구 문화에 맞는 학문적 열정 서술. "Why JHU?" 강력히 강조' },
+      { label: '추천서', weight: '높음', note: '과학 교사의 강력한 학문적 추천서. 연구 능력 증명이 핵심' },
+      { label: '과외활동', weight: '중간', note: '의료·과학 중심 클럽·봉사·연구 인턴. 다양성보다 깊이 선호' },
+    ],
   },
 
   'Duke': {
@@ -482,6 +593,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Pre-Med 환경 탁월 + Duke Medical School Top 10. 노스캐롤라이나 위치로 생활비 상대적으로 낮음. Need-Aware(국제학생)이지만 국제학생 재정지원 상대적으로 후한 편. 스포츠(농구 명문) 강해 캠퍼스 커뮤니티 활력. Global Health 프로그램 세계 강함.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. 라틴아메리카 사정관 평가. Duke의 Global Health 프로그램이 중미 공중보건과 강한 접점 — 파나마 배경과 시너지 탁월. Duke-NUS Medical School(싱가포르 연계) 보유 → 국제 의료 관심 학생에게 매력적. 파나마 → Duke 지원자 극소수 → 희소성 효과.',
     chemNote: '😈 Duke 화학과 전국 Top 10. 생화학·의화학 분야 강하고 Duke Medical School과 연계한 Pre-Med 화학 커리큘럼 탁월. Bass Connections 학제간 연구 프로그램으로 화학+글로벌보건 융합 연구 가능. 꾸미처럼 화학+Pre-Med+글로벌 의료 관심이 있다면 Duke의 화학과 Global Health 조합이 매우 매력적.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적. Duke는 학업과 과외활동 균형을 매우 중시하는 학교' },
+      { label: '에세이', weight: '핵심', note: 'Why Duke? + 글로벌 보건·리더십·연구 관심 어필이 효과적' },
+      { label: '과외활동 균형', weight: '핵심', note: '스포츠·봉사·연구 등 다방면에서 균형 잡힌 "Duke 사람" 선호' },
+      { label: '추천서', weight: '높음', note: '교사+카운슬러. 지적 성장과 커뮤니티 기여를 구체적으로 서술' },
+      { label: '리더십', weight: '높음', note: '학생 조직·캡스톤·사회 기여 활동에서의 리더십이 중요' },
+      { label: 'Global Health 관심', weight: '중간', note: '파나마 배경 + 글로벌 보건 관심은 Duke와 매우 잘 맞음' },
+    ],
   },
 
   'Northwestern': {
@@ -514,6 +633,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Feinberg 의대 연계 Pre-Med 환경 탁월. 시카고 근교(Evanston) 위치로 생활 환경 우수. Need-Aware(국제학생)라 재정 주의. ED 지원 전략. ❌ HPME BS-MD는 2020년 폐지 — 일반 Pre-Med 트랙 기준으로 Northwestern을 평가해야 함. Pre-Med만으로는 Brown·JHU·Duke 대비 우선순위 낮음.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. 라틴아메리카 사정관 평가. 파나마 → Northwestern 지원자 극소수 → 희소성 효과. 시카고의 라틴아메리카 커뮤니티(히스패닉 대도시) 문화와도 맞닿음. ED 지원 추천.',
     chemNote: '🟣 Northwestern 화학과 전국 Top 5. 화학+재료과학 분야 세계적 수준. 특히 나노화학·의화학(Medicinal Chemistry) 세계 최강. Feinberg Medical School 연계 Pre-Med 화학 트랙 탁월. HPME 폐지로 BS-MD 경로는 없지만, 화학 전공+Pre-Med 조합으로 의대 지원 스펙 쌓기엔 여전히 우수한 환경.',
+    evalCriteria: [
+      { label: 'Why Northwestern 에세이', weight: '핵심', note: '특정 교수·프로그램·연구를 구체적으로 언급한 맞춤형 에세이 필수' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 선택. 학문적 깊이가 중요' },
+      { label: '과외활동', weight: '높음', note: '특정 분야 깊이 있는 집중 활동. Spike(탁월한 한 분야) 선호' },
+      { label: '추천서', weight: '높음', note: '교사+카운슬러 추천서. Northwestern의 학문적 엄격성 감당 가능함을 보여야' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰 실시. NU 커뮤니티 fit 및 열정 평가' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성은 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Vanderbilt': {
@@ -546,6 +673,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'VUMC 동일 캠퍼스 Pre-Med 환경 우수. SE 지역 의대 진학률 최상위. Vanderbilt는 최근 합격률 급락 중 — 실제 난이도 상승. Need-Aware(국제학생) 재정 주의. Nashville = 음악·문화 도시라 캠퍼스 생활 활력. ED 지원 전략.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. 라틴아메리카 사정관 평가. Vanderbilt의 Global Health 프로그램이 발전 중 — 파나마 중미 배경과 의료 관심 연결 가능. Nashville의 다양성 문화 확대 중. 파나마 → Vanderbilt 지원자 극소수 → 희소성.',
     chemNote: '⭐ Vanderbilt 화학과 전국 상위권. Pre-Med 화학 트랙 우수. VUMC 연계 생화학·분자생물학 연구 기회 있음. Vanderbilt Institute of Chemical Biology(VICB) — 화학생물학 연구 독자적 인스티튜트 보유. 꾸미처럼 화학+Pre-Med 목표라면 VICB 연구 참여가 강력한 의대 지원 스펙.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 합격률이 급락해 학업 수준 기대치 상승' },
+      { label: '에세이', weight: '핵심', note: 'Why Vanderbilt? + 개인 서사. VUMC 의료 환경 관심 어필 효과적' },
+      { label: '과외활동·균형', weight: '높음', note: '학업+활동 균형 잡힌 전인격적 학생 선호. 음악·의료봉사 등' },
+      { label: '추천서', weight: '높음', note: '교사+카운슬러 추천서. 인성 및 커뮤니티 기여 강조' },
+      { label: 'Pre-Med 헌신', weight: '높음', note: '의학 관심 활동 (VUMC 연계 봉사·인턴십 등) 중요' },
+      { label: 'SAT/ACT', weight: '중간', note: '선택 제출이지만 1530+ 권장. 제출 시 유리' },
+    ],
   },
 
   'Williams': {
@@ -578,6 +713,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '전미 LAC 1위. 국제학생 Need-Blind + Ivy급 재정지원. 초소규모(~2,200명)라 교수와 1:1 관계가 깊음. 의대 진학 목표라면 Williams는 LAC 중 최상위 경로. 단 매사추세츠 서부 시골 위치 — 도시 선호 학생과는 맞지 않을 수 있음.',
     panamaNote: '📍 Need-Blind(국제학생) → 재정 안심. 라틴아메리카 사정관 평가. 초소규모 커뮤니티 — 지역 다양성 더욱 중시. 파나마 한인이라는 독특한 배경이 Williams 소규모 다양성 문화에서 특히 빛남. 파나마 → Williams 지원자 사실상 없음 → 지역 희소성 극대화.',
     chemNote: '🎨 Williams 화학과는 소규모이지만 교수-학생 비율 7:1 수준의 집중적 지도. 학부생 연구 참여 기회(Summer Research) 탁월. Pre-Med 화학 환경 우수. 단 대형 연구 인프라는 종합대학 대비 제한. 화학을 교수와 가까이에서 깊이 연구하고 싶다면 Williams LAC 환경이 최적.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: 'Williams 철학(소규모 집중 교육)에 공감하는 개인 서사 필수' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 + 지적 탐구 능력. LAC 1위답게 학문적 깊이 중시' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 한두 가지 활동. 커뮤니티 기여·예술·스포츠 고루 평가' },
+      { label: '추천서', weight: '높음', note: '초소규모 학교라 추천서 비중 매우 큼. 인격·지적 능력 구체 서술 필수' },
+      { label: '다양성·희소성', weight: '높음', note: '파나마 출신 희소성이 Williams 소규모 다양성 가치와 완벽히 맞음' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰. 지적 호기심·커뮤니티 기여 의지 평가' },
+    ],
   },
 
   'Amherst': {
@@ -610,6 +753,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '국제학생 Need-Blind + LAC 중 최상위 재정지원. Five College Consortium으로 UMass Amherst 시설·강의 활용 가능. Open Curriculum으로 화학+Pre-Med 자유 조합. 초소규모(~2,000명) 집중도 최강. 매사추세츠 서부 위치.',
     panamaNote: '📍 Need-Blind(국제학생) → 재정 안심(최상급 수준). 라틴아메리카 사정관 평가. 파나마 출신 Amherst 지원자 사실상 없음 → 희소성 극대화. Amherst의 강한 다양성 중시 문화와 파나마 한인 스토리 완벽히 맞음. Five College로 UMass 의예 관련 과목 수강도 가능.',
     chemNote: '🔮 Amherst 화학과는 소규모이지만 탄탄. Five College Consortium으로 UMass Amherst 대형 화학 연구시설 접근 가능 — LAC임에도 연구 인프라 제한 덜함. Pre-Med 화학 커리큘럼 탄탄하고 Open Curriculum으로 화학+생물+Pre-Med 조합 자유자재. 꾸미의 화학 관심과 유연한 학습 스타일에 잘 맞음.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: 'Amherst Open Curriculum + 지적 자유 철학에 공감하는 서사 필수' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적. Open Curriculum으로 자기주도 학습 능력도 평가' },
+      { label: '다양성', weight: '핵심', note: 'Amherst는 사회경제적·지역적 다양성을 매우 적극적으로 추구' },
+      { label: '과외활동', weight: '높음', note: '특정 분야 열정+깊이. Five College 활용 계획도 어필 가능' },
+      { label: '추천서', weight: '높음', note: '초소규모(2,000명)라 추천서 품질이 합격에 큰 영향' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰. 자기주도성·지적 호기심·커뮤니티 기여 평가' },
+    ],
   },
 
   'Pomona': {
@@ -642,6 +793,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '국제학생 Need-Blind + 서부 캘리포니아 위치. Claremont Consortium으로 Harvey Mudd(STEM 최강) 등 5개교 강의·연구 공유. 초소규모(~1,800명) 최강 집중도. LA 근교로 도시 접근 가능 — 시골 LAC 부담 없음.',
     panamaNote: '📍 Need-Blind(국제학생) → 재정 안심. 라틴아메리카 사정관 평가. 캘리포니아의 강한 히스패닉/라틴아메리카 커뮤니티 — 파나마 배경과 자연스러운 접점. 파나마 → Pomona 지원자 극소수 → 희소성. LA 접근 가능이라 한인 커뮤니티도 있어 꾸미에게 문화적 편안함.',
     chemNote: '🌴 Pomona 화학과는 LAC임에도 연구 장비·인프라 탁월. Claremont Consortium으로 Harvey Mudd College 화학 강의 접근 가능 — STEM 집중도 높은 화학 커리큘럼 수강 가능. Pre-Med 화학 환경 우수. 캘리포니아 위치로 제약·바이오텍 산업(생명과학) 인접. 학부생 여름 연구 기회 풍부.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: 'Pomona의 다양성·포용 문화와 본인 배경 연결하는 서사 필수' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 + 지적 탐구 능력. LAC 7위 수준의 학문적 깊이' },
+      { label: '다양성', weight: '핵심', note: 'Claremont 지역 다양성 + 파나마 배경은 매우 강력한 자산' },
+      { label: '과외활동', weight: '높음', note: '특정 분야 열정. Claremont Consortium 활용 계획 어필 가능' },
+      { label: '추천서', weight: '높음', note: '초소규모라 추천서 품질이 합격에 큰 영향' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰. Pomona와의 철학적 fit 및 열정 평가' },
+    ],
   },
 
   'Rice': {
@@ -674,6 +833,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Texas Medical Center 인접 Pre-Med 환경 독보적. 학비 상대적 저렴($58K). EA(비구속 조기지원) 전형 가능. 소규모 교육 환경 우수. Need-Aware(국제학생) 재정 주의. Houston = 미국 내 최대 히스패닉 도시 중 하나.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. EA 전형 지원 가능(비구속적). 라틴아메리카 사정관 평가. Houston은 미국 내 최대 히스패닉 대도시 중 하나 — 파나마 배경과 강한 문화적 접점. 멕시코만 + 중미 연결성.',
     chemNote: '🏙️ Rice 화학과는 나노기술·재료화학 분야 세계적 수준 (Richard Smalley — 탄소나노튜브 발견, Nobel 수상). Texas Medical Center 인접으로 화학+의학 연구 인턴십 기회 독보적. Pre-Med 화학 환경 최상급. 꾸미처럼 화학+Pre-Med 목표라면 Rice의 TMC 연계는 실질적 강점.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 이공계·Pre-Med 모두 최상위 성적 요구' },
+      { label: 'Why Rice 에세이', weight: '핵심', note: 'Residential College 시스템·TMC 연계·특정 교수 언급 맞춤형 에세이 필수' },
+      { label: '과외활동·연구', weight: '높음', note: '연구 경험 + 다양한 활동. Rice는 학업·활동 균형 선호' },
+      { label: '추천서', weight: '높음', note: '교사+카운슬러. 학문적 깊이와 커뮤니티 기여 서술' },
+      { label: 'Pre-Med 헌신', weight: '높음', note: '(Pre-Med 지원 시) TMC 인턴·병원 봉사·의료 관심 활동 중요' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성 + Houston 히스패닉 커뮤니티 연결 가능' },
+    ],
   },
 
   'Swarthmore': {
@@ -706,6 +873,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '전미 LAC 4위. 국제학생 Need-Blind + 재정지원 후함. Philadelphia 근교 위치로 도시 접근 가능. 초소규모(~1,600명) 집중 STEM 교육. Pre-Med 의대 진학률 LAC 최상위급. 꾸미 SAT 1570은 충분한 수준.',
     panamaNote: '📍 Need-Blind(국제학생) → 재정 안심. 라틴아메리카 사정관 평가. 파나마 → Swarthmore 지원자 사실상 없음 → 희소성 극대화. Philadelphia 히스패닉 커뮤니티 접점.',
     chemNote: '🪷 Swarthmore 화학과는 STEM 강점 LAC답게 연구 수준 탁월. 교수 1인당 학생 수 최저 수준 — 1:1 연구 지도. Philadelphia 근교라 대형 제약사·병원 연구 접근 가능. Pre-Med 화학 환경 우수. 꾸미의 화학 관심과 소규모 집중 학습 스타일에 최적.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: 'STEM 강점 LAC답게 최상위 이과 성적 필수. Honors Program 도전 중요' },
+      { label: '에세이', weight: '핵심', note: 'Swarthmore 가치(지적 엄격성·사회정의·다양성)에 공감하는 서사 필수' },
+      { label: '지적 호기심', weight: '핵심', note: '학문 탐구 열정과 깊이 있는 지적 관심이 가장 중요한 평가 요소' },
+      { label: '다양성·사회정의', weight: '높음', note: 'Swarthmore는 다양성과 사회 기여를 매우 강하게 중시' },
+      { label: '추천서', weight: '높음', note: '초소규모(1,600명)라 추천서 품질이 합격에 매우 큰 영향' },
+      { label: '과외활동', weight: '중간', note: '사회봉사·연구·예술 등 다양한 활동. 한 분야 깊이 선호' },
+    ],
   },
 
   'Bowdoin': {
@@ -738,6 +913,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '전미 LAC 5위. 국제학생 Need-Blind + 재정지원 후함. 초소규모(~1,850명) 최고 집중도. 단 메인주 시골 해안 위치 — 도시 생활 제한적. 학업 능력보다 에세이·활동 스토리 중심으로 평가. 꾸미의 파나마 서사와 잘 맞는 학교.',
     panamaNote: '📍 Need-Blind(국제학생) → 재정 안심. 라틴아메리카 사정관 평가. 파나마 → Bowdoin 지원자 사실상 없음 → 초희소성. 메인주 작은 공동체에서 다양성이 특히 두드러짐. 자연·해양 환경이 파나마 해안 배경과 유사한 정서.',
     chemNote: '🐻‍❄️ Bowdoin 화학과는 해양화학·환경화학 독특한 강점 (메인 해안 위치 활용). Pre-Med 화학 커리큘럼 탄탄. 교수 1:1 연구 지도 탁월. 꾸미처럼 화학 관심 있다면 일반적인 의화학 외에 해양·환경 화학이라는 독특한 관점도 경험 가능.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: '개인 서사와 커뮤니티 기여. "Bowdoin 사람"으로서의 진정성이 핵심' },
+      { label: '과외활동·서사', weight: '핵심', note: 'Bowdoin은 성적보다 에세이·활동·스토리 중심으로 평가' },
+      { label: '다양성', weight: '핵심', note: '파나마 배경 등 지역 희소성이 소규모 Bowdoin 커뮤니티에서 매우 강력' },
+      { label: '추천서', weight: '높음', note: '초소규모(1,850명)라 추천서 품질이 결정적 영향' },
+      { label: 'GPA / 학업성취', weight: '높음', note: 'SAT 미반영이지만 학업 성적은 여전히 중요. 도전적 과목 이수' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰. 인성·지적 호기심·커뮤니티 fit 평가' },
+    ],
   },
 
   'WashU in St. Louis': {
@@ -770,6 +953,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'WashU 의대(Top 5) 동일 캠퍼스 — Pre-Med 환경 하단2 중 최상. Need-Aware이지만 재정지원 매우 후한 편. 합격률 ~11%로 하단2 중 상대적으로 현실적. St. Louis 중서부 위치. ED1·ED2 모두 지원 가능.',
     panamaNote: '📍 Need-Aware지만 재정지원 후함 → 기대보다 지원금 받을 가능성. 라틴아메리카 사정관 평가. 파나마 → WashU 지원자 극소수 → 희소성 효과. ED1 지원 추천.',
     chemNote: '🌆 WashU 화학과 전국 Top 10. WashU 의대(Top 5)와 직접 연계한 생화학·의화학 연구 탁월. Barnes-Jewish Hospital 연계 임상화학 연구 접근 가능. Pre-Med 화학 환경 최상급. 꾸미처럼 화학+Pre-Med 목표라면 WashU는 하단2 그룹 최고 선택.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적. WashU 의대(Top 5) 연계 Pre-Med는 최상위권 요구' },
+      { label: '에세이', weight: '핵심', note: 'Why WashU? + 특정 교수·연구·프로그램 구체 언급 필수' },
+      { label: '과외활동·연구', weight: '높음', note: '연구 경험 + 의료 관심 활동. Barnes-Jewish 연계 강조 가능' },
+      { label: '추천서', weight: '높음', note: '교사+카운슬러 추천서. 학문적 능력과 인성 구체 서술' },
+      { label: 'Pre-Med 헌신', weight: '높음', note: '의학 관심 활동 필수. WashU 의대 연계 강점 어필' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 중서부 WashU에서 강한 차별화 요소' },
+    ],
   },
 
   'Carnegie Mellon': {
@@ -802,6 +993,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'CS·공학 세계 최강. Pre-Med 목표와 방향이 다른 학교 — 꾸미 Pre-Med 목표로는 우선순위 낮음. 단 화학+CS를 융합해 Computational Biology·Drug Discovery AI 분야 관심 있다면 고려 가능. Need-Aware 재정 주의.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. 라틴아메리카 사정관 평가. CMU는 한국 학생들이 CS 전공으로 많이 지원 — 파나마 출신이지만 한국 국적이라 CS 지원자 풀 고려 필요. Pre-Med 목표면 CMU에서의 경쟁 낮음 (지원자 적음).',
     chemNote: '🤖 CMU 화학과는 재료화학·계산화학 분야 강함. Computational Chemistry + CS 융합 독보적. 화학+CS = Drug Discovery AI라는 최신 분야. 꾸미가 화학+Pre-Med 외에 AI 기반 신약개발에 관심 있다면 CMU가 독특한 경로. 단 순수 Pre-Med 화학 트랙은 아님.',
+    evalCriteria: [
+      { label: 'CS/공학 실력', weight: '핵심', note: '지원 학부(CS·공학 등)에 맞는 압도적 STEM 능력 필수' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 이과 성적. 수학 800. AP CS·미적분 학점 중요' },
+      { label: 'Why CMU 에세이', weight: '핵심', note: '지원 칼리지(SCS·Engineering·Dietrich 등) 맞춤형 에세이 필수' },
+      { label: '포트폴리오·프로젝트', weight: '높음', note: '코딩 프로젝트·게임 개발·해커톤 등 실제 구현 경험' },
+      { label: '추천서', weight: '중간', note: '수학·CS 교사 추천서. 분석 능력과 창의성 증명' },
+      { label: '과외활동', weight: '중간', note: 'STEM 관련 클럽·경진대회·연구. 학문적 깊이 위주' },
+    ],
   },
 
   'Notre Dame': {
@@ -834,6 +1033,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '가톨릭 전통 대학. Pre-Med 환경 우수하지만 의대 없음. 글로벌 보건 프로그램 강점. Need-Aware(국제학생) 재정 주의. REA 전형(제한적 조기행동 — 다른 사립 EA/ED 동시 지원 불가). 종교적 문화 맞는지 확인 필요.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. 라틴아메리카 사정관 평가. Notre Dame의 가톨릭·선교·글로벌 보건 문화와 파나마(라틴아메리카 가톨릭 문화권) 배경이 자연스럽게 맞닿음. 파나마 의료 관찰 경험이 Notre Dame 에세이 소재로 적합.',
     chemNote: '⛪ Notre Dame 화학과 전국 상위권. 특히 유기 합성화학 분야 강함. Pre-Med 화학 커리큘럼 탄탄. 가톨릭 대학이라 의료 윤리·의학인류학 과목 연계 독특. 화학+글로벌 보건 융합 관심 있다면 Notre Dame의 학문적 환경이 잘 맞음.',
+    evalCriteria: [
+      { label: '에세이·스토리', weight: '핵심', note: 'Notre Dame 가톨릭 가치·봉사·글로벌 보건과 연결되는 개인 서사 필수' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적. 도전적 과목 이수. 의대 진학 목표 시 이과 최상위' },
+      { label: '봉사·커뮤니티', weight: '핵심', note: 'Notre Dame은 가톨릭 봉사 정신·커뮤니티 기여를 매우 강하게 중시' },
+      { label: '과외활동', weight: '높음', note: '의료봉사·해외봉사·글로벌 보건 활동이 Notre Dame 철학과 잘 맞음' },
+      { label: '추천서', weight: '높음', note: '교사+카운슬러. 인성과 가톨릭 가치 부합 여부 서술 도움' },
+      { label: '인터뷰', weight: '중간', note: '동문 인터뷰. Notre Dame 커뮤니티 fit 및 봉사 정신 평가' },
+    ],
   },
 
   'Harvey Mudd': {
@@ -866,6 +1073,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '수학 800 + STEM 최강 환경. 단 Pre-Med 목표와 방향 완전히 다름. 꾸미 Pre-Med 목표로는 적합하지 않음. Claremont Consortium으로 Pomona 등과 강의 공유. 만약 의사보다 과학자·엔지니어 방향으로 전환한다면 세계 최고 환경.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. 라틴아메리카 사정관 평가. Harvey Mudd는 STEM 실력이 전부 — 파나마 출신 다양성보다 수학·과학 능력이 절대 우선. Claremont의 히스패닉 커뮤니티.',
     chemNote: '⚙️ Harvey Mudd 화학과는 STEM 특화 LAC답게 연구 강도 세계 최고 수준. 학부생 연구 의무. Claremont Consortium으로 Pomona·Scripps 화학 강의 공유. 순수 화학·물리화학 연구 환경 LAC 중 최강. 단 Pre-Med 연계보다 화학자·재료과학자 양성에 초점.',
+    evalCriteria: [
+      { label: 'STEM 순수 실력', weight: '핵심', note: '수학·물리·화학 압도적 성취 필수. Caltech 수준의 STEM 강도' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 이과 성적 필수. AP 수학·물리·화학 5점 기대' },
+      { label: '에세이·개인성', weight: '핵심', note: 'Harvey Mudd의 독특한 문화·소규모 공동체 철학과 fit 보여야 함' },
+      { label: '연구·프로젝트', weight: '높음', note: 'STEM 연구 경험·로보틱스·컴퓨팅 프로젝트 등 실제 구현 경험' },
+      { label: '추천서', weight: '높음', note: '초소규모(900명)라 추천서 품질이 합격에 결정적 영향' },
+      { label: '과외활동', weight: '중간', note: 'STEM 관련 활동 위주. 깊이 집중형 선호' },
+    ],
   },
 
   'UCLA': {
@@ -898,6 +1113,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ 공립이라 저렴할 것 같지만 국제학생 재정지원 사실상 $0 — 4년 총 비용 ~$290,000~305,000. Need-Blind 사립에서 재정지원 $40,000/년 받으면 4년 총 비용 비슷하거나 오히려 사립이 저렴. David Geffen 의대 Top 10. LA·한인타운 근접. EA/ED 없음(RD 단일).',
     panamaNote: '📍 ⚠️ 국제학생 재정지원 $0 (공립 UC 정책) — 실질 비용 재검토 필요. 라틴아메리카 사정관 평가. LA = 미국 최대 히스패닉+한인 도시 → 파나마 한인 배경 문화적 접점 최강. 한인타운 직접 접근 가능.',
     chemNote: '🌅 UCLA 화학과 전국 Top 10. Nobel 수상자 출신 다수. LA 위치로 제약·바이오텍 산업 허브 인접. Pre-Med 화학 환경 우수. 단 대형 학교라 교수 접근 경쟁 치열. 화학 기초를 매우 탄탄하게 쌓을 수 있는 환경.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: 'UC 시스템 특성상 학업 성적이 가장 중요. 가중 GPA 4.2+ 권장' },
+      { label: '개인 에세이(PIQ)', weight: '핵심', note: 'UC Personal Insight Questions — 4개 서술. 개인 서사와 역경 극복 중요' },
+      { label: '과외활동', weight: '높음', note: 'UC는 활동을 "Activities & Awards" 형식으로 별도 평가. 다양하고 깊이 있는 활동' },
+      { label: '다양성·배경', weight: '높음', note: 'UC는 1세대 대학생·저소득층·다양한 배경을 강하게 우대' },
+      { label: 'SAT/ACT', weight: '참고', note: 'UC 전체 Test-Free 정책으로 SAT 불사용. 학업 성적이 더 중요' },
+      { label: '지역 다양성', weight: '높음', note: '파나마 출신 희소성이 캘리포니아 중심 UC에서는 강한 차별화 요소' },
+    ],
   },
 
   'UC Berkeley': {
@@ -930,6 +1153,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ 공립이라 저렴할 것 같지만 국제학생 재정지원 사실상 $0 — 4년 총 비용 ~$272,000~288,000. 자체 의대 없어 Pre-Med 목표론 WashU·JHU 대비 약점. 실리콘밸리+테크 연계 최강. EA/ED 없음(RD 단일). 캠퍼스 분위기 자유·진보적.',
     panamaNote: '📍 ⚠️ 국제학생 재정지원 $0 (공립 UC 정책) — 실질 비용 재검토 필요. 라틴아메리카 사정관 평가. Bay Area = 실리콘밸리 + 아시아계·히스패닉 다양성. 한인 커뮤니티 접근 가능. Pre-Med보다 Bio+CS 융합 관심 시 강점.',
     chemNote: '🐻 UC Berkeley 화학과 전국 Top 5 (역사적 Nobel 수상자 최다 — Seaborg, Calvin, Giauque 등). 물리화학·합성화학·그린케미스트리 세계 최강. 단 Pre-Med 화학 연계보다 순수 화학 연구 집중. 꾸미에게 화학 기초를 가장 깊고 넓게 쌓을 수 있는 환경.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '가중 GPA 4.3+ 권장. 전공별 경쟁이 다름 (CS·공학 가장 치열)' },
+      { label: '개인 에세이(PIQ)', weight: '핵심', note: 'UC Personal Insight Questions 4개. 역경·리더십·지식 추구 서술 핵심' },
+      { label: '과외활동', weight: '높음', note: '학문·리더십·봉사 등 다양한 활동. UC는 활동 다양성 선호' },
+      { label: '다양성·배경', weight: '높음', note: 'UC는 사회경제적 다양성을 매우 강하게 고려' },
+      { label: '전공 적합성', weight: '높음', note: '지원 전공과 학업·활동의 연계성. CS는 코딩 포트폴리오 중요' },
+      { label: 'SAT/ACT', weight: '참고', note: 'UC 전체 Test-Free. GPA·에세이·활동이 전부' },
+    ],
   },
 
   // ─────────────────────────────────────────
@@ -966,6 +1197,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ 국제학생 비율 ~15%로 매우 높음 — 파나마 출신 희소성 프리미엄 상대적으로 낮음. COA ~$88K (NYC 생활비)로 전미 최고 수준. Need-Aware 재정지원 불확실. Langone Health 임상 환경은 탁월. Pre-Med 내부 경쟁 치열.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실 + NYC 비용 주의. 국제학생 비율 15%로 파나마 희소성 낮음. NYC = 미국 내 최대 의료·제약 허브. Langone Health Pre-Med 임상 기회 독보적.',
     chemNote: '🗽 NYU 화학과는 연구 수준 우수. NYC 위치로 제약회사·병원 연구 인턴십 접근 독보적 — Pfizer·BMS·Merck 본사 인근. Grossman 의대 연계 생화학·의화학 연구. 단 학교 규모가 커 교수 접근성 경쟁 있음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 글로벌 Top 지원자 풀에서 경쟁' },
+      { label: 'Why NYU 에세이', weight: '핵심', note: 'NYC 도시 환경·특정 스쿨(Stern·CAS·Gallatin 등) 맞춤 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: 'NYC 기반 인턴십·예술·연구 등 도시 활용 경험이 NYU와 궁합 좋음' },
+      { label: '다양성', weight: '높음', note: 'NYU는 국제적 다양성을 매우 강하게 중시' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러. 학업 능력과 NYU 환경 fit 서술' },
+      { label: '인터뷰', weight: '참고', note: '일부 프로그램에서 인터뷰 실시. 전반적으로 에세이 비중이 더 큼' },
+    ],
   },
 
   'Georgia Tech': {
@@ -998,6 +1237,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '공학·STEM 세계 최강. Pre-Med 목표와 방향 다름. 공립이라 학비 저렴($37K)하지만 재정지원 거의 없음. Atlanta = CDC(미국 질병통제센터) 인접. Biomedical Engineering 관심 있다면 세계 최고 환경. 꾸미 Pre-Med 목표로는 우선순위 낮음.',
     panamaNote: '📍 공립 → 국제학생 재정지원 제한적. Atlanta 위치 — CDC 인접으로 공중보건 관심자에게 독보적. 파나마 출신 공학·STEM 방향이라면 Georgia Tech의 비용 효율 매우 좋음. Pre-Med 목표면 부적합.',
     chemNote: '🐝 Georgia Tech 화학과는 Materials Science + Chemistry 융합 세계적 수준. Biomedical Engineering 연계 의화학. 단 Pre-Med 화학 트랙보다 화학공학·재료 방향에 특화. 꾸미 화학+Pre-Med 목표와는 방향 다소 달라.',
+    evalCriteria: [
+      { label: 'GPA / 이과 성적', weight: '핵심', note: '공학·STEM 성적이 핵심. 수학·물리 최상위 성적 필수' },
+      { label: 'Why Georgia Tech 에세이', weight: '핵심', note: '공학 분야 관심과 Georgia Tech 특정 프로그램 연결 에세이 필수' },
+      { label: 'STEM 과외활동', weight: '높음', note: '로보틱스·해커톤·경진대회·연구 프로젝트 등 실제 STEM 활동' },
+      { label: '추천서', weight: '높음', note: '수학·과학 교사 추천서. 공학적 사고력과 문제해결 능력 증명' },
+      { label: '협업·리더십', weight: '중간', note: 'GT는 팀 프로젝트 글로벌 문화 — 협업 능력 어필 도움' },
+      { label: 'SAT/ACT', weight: '중간', note: '선택 제출이지만 제출 시 1520+ 권장' },
+    ],
   },
 
   'UT Austin': {
@@ -1030,6 +1277,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '초대형 공립(~39,000명 학부). 국제학생 재정지원 사실상 없음. 합격률 ~29%지만 전공별 격차 큼. Dell 의대 연계 Pre-Med 환경 보통. Austin 테크 생태계 급성장. 학비 저렴($38K)하지만 재정지원 없어 총 비용 부담 있음.',
     panamaNote: '📍 국제학생 재정지원 매우 제한적 (공립 텍사스). Austin = 급성장 히스패닉+한인 커뮤니티. Texas Medical Center(Houston, 세계 최대) 접근. 파나마 출신 희소성 효과 있음. SAT 필수 제출.',
     chemNote: '🤠 UT Austin 화학과 전국 상위권. 유기화학·합성화학 분야 강함. Dell 의대 연계 의화학 연구. 텍사스 석유화학 산업 연계 인턴십 기회. Pre-Med 화학 환경 우수. 학비 대비 화학 교육 효율 좋음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Georgetown': {
@@ -1062,6 +1317,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'DC 위치 — 정치·외교·세계보건 접근 최강. Pre-Med 환경 우수 + Global Health 독보적. Need-Aware(국제학생) 재정 주의. DC 생활비 포함 COA ~$87K. ED 없음(RD 단일). 가톨릭 학문 문화.',
     panamaNote: '📍 DC 위치 — 파나마(중미) 외교 관계에서 DC는 전략적 요충. 라틴아메리카 사정관 평가. Georgetown의 가톨릭·글로벌 보건·라틴아메리카 연구 프로그램과 파나마 배경이 자연스럽게 연결. 정치·외교 에세이 소재로 파나마 위치 활용 강점.',
     chemNote: '⚖️ Georgetown 화학과는 재료화학·생화학 연구 우수. DC 위치로 FDA·NIH 인턴십 접근 독보적. Pre-Med 화학 환경 양호. 의료 윤리·공공보건 관점의 독특한 학문적 화학 시각. 정부 연구기관 연계 화학 연구 기회.',
+    evalCriteria: [
+      { label: '에세이', weight: '핵심', note: 'Georgetown 가톨릭·globlal 가치 공감 + 특정 스쿨 맞춤 에세이 필수' },
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적. 정치·외교·보건 분야 학문적 관심 필수' },
+      { label: '봉사·사회정의', weight: '핵심', note: 'Georgetown 예수회 전통 — 커뮤니티 봉사·사회정의 활동이 핵심 평가' },
+      { label: '인터뷰', weight: '높음', note: 'Georgetown 인터뷰는 실질적으로 중요. DC 위치 인지와 정치·외교 관심 표현 필요' },
+      { label: '과외활동', weight: '높음', note: '글로벌 보건·외교·정치·봉사 관련 활동이 Georgetown과 매우 잘 맞음' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러. 인성과 사회 기여 의지를 구체적으로 서술' },
+    ],
   },
 
   'USC': {
@@ -1094,6 +1357,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ 학비 $68K + COA ~$93K — 2그룹 최고 비용. Need-Aware + 국제학생 재정지원 불확실. 국제학생 비율 ~13%로 높아 파나마 희소성 낮음. Keck 의대 연계 Pre-Med 환경 양호. LA 엔터·테크 산업 연계 강점. 먼저 비용 대비 가치 검토 필요.',
     panamaNote: '📍 Need-Aware(국제학생) → 재정 불확실. 국제학생 비율 높아 파나마 희소성 상대적 낮음. LA의 대규모 히스패닉+한인 문화 접점. Keck 의대 연계 Pre-Med 기회. 비용 대비 효율은 낮은 편.',
     chemNote: '🎬 USC 화학과는 연구 수준 우수. LA 위치로 제약·바이오 산업 인접. Keck 의대 연계 의화학 연구 기회. 나노화학·재료화학 분야 강함. 꾸미 Pre-Med 목표에 적절한 연결 — 단 비용 대비 효율 체크 필요.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Cooper Union': {
@@ -1126,6 +1397,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '❌ Pre-Med 목표와 방향 완전히 다름. 모든 학생 반액(50%) 장학금 자동 — 2그룹 최고 비용 효율. NYC 위치. 화학공학 방향으로 전환 시 세계적 환경. 꾸미 Pre-Med 목표로는 지원 부적합.',
     panamaNote: '📍 반액 장학금 → 재정 상대적 안심. NYC 위치. 공학·예술 분야면 파나마 배경보다 STEM 실력이 절대 우선. Pre-Med 목표 꾸미에게 부적합.',
     chemNote: '🔩 Cooper Union 화학공학과는 세계적 수준. 단 Pre-Med 화학 트랙 없음. 화학공학·재료공학 방향에 특화. 꾸미 Pre-Med 목표 기준으로는 방향이 다름. 화학공학 방향 관심 시 NYC + 반액 장학금은 최강 조합.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Franklin W. Olin College of Engineering': {
@@ -1158,6 +1437,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '❌ Pre-Med 목표와 방향 완전히 다름. 360명 초소규모 + 모든 학생 반액(50%) 장학금 자동. Boston 근교라 MIT·Harvard 커뮤니티 접근 가능. 공학 방향 전환 시 비용 효율 최강. 꾸미 Pre-Med 목표로는 부적합.',
     panamaNote: '📍 반액 장학금 → 재정 상대적 안심. Boston 근교. 공학 분야면 Olin의 비용 효율과 혁신 교육 탁월. Pre-Med 꾸미에게는 방향 안 맞음.',
     chemNote: '🔧 Olin은 화학 전공이 없음(기계·전기·컴퓨터공학 중심). Pre-Med 화학 트랙 없음. 꾸미의 화학+Pre-Med 목표와 방향이 맞지 않음. 공학 방향 전환 시에만 고려 대상.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   // ─────────────────────────────────────────
@@ -1194,6 +1481,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '✅ Pre-Med 목표 꾸미에게 강력 추천. Atlanta = CDC + Emory Hospital. 의대 진학률 전국 최상위. Need-Aware 재정 주의. Georgetown과 함께 꾸미 2그룹 핵심 타겟. 소규모(7,000명)로 교수 접근성 우수.',
     panamaNote: '📍 Need-Aware → 재정 불확실. Atlanta 위치 — CDC 본부 인근. 파나마 출신 + 공중보건·의학 관심 → Emory-CDC 파트너십이 독보적 강점. 라틴아메리카 사정관 평가. 파나마 희소성 효과 있음.',
     chemNote: '🦅 Emory 화학과는 Pre-Med 연계 최강. 생화학·의화학 연구에 CDC 연구진과 협업 가능. Pre-Med 화학 트랙 탄탄. 꾸미의 화학+의학 목표에 매우 잘 맞는 환경. 교수 접근성도 대형 학교보다 좋음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. Pre-Med 지원 시 이과 만점 기대' },
+      { label: 'Why Emory 에세이', weight: '핵심', note: 'Emory+CDC 연계·글로벌 보건 관심 연결 에세이가 매우 효과적' },
+      { label: 'Pre-Med 헌신', weight: '핵심', note: '의학 관심 활동 필수. Emory 병원·CDC 연계 강조하면 큰 강점' },
+      { label: '과외활동', weight: '높음', note: '의료봉사·연구·글로벌 보건 관련 활동. Emory 철학과 맞는 것 우선' },
+      { label: '추천서', weight: '높음', note: '교사+카운슬러. 학문적 능력과 의료 분야 열정 서술' },
+      { label: '다양성', weight: '중간', note: '파나마 배경 + 공중보건 관심은 Emory-CDC 파트너십과 강한 시너지' },
+    ],
   },
 
   'U of Virginia': {
@@ -1226,6 +1521,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '공립이지만 사립급 위상 (\'Public Ivy\'). 토마스 제퍼슨 설립 역사적 명문. 국제학생 재정지원 제한적. EA 지원 가능. UVA 의대 Top 25. 국제학생 실질 합격률은 전체(18%)보다 훨씬 낮음 주의.',
     panamaNote: '📍 공립 → 국제학생 재정지원 제한적. EA 지원 가능(비서약). Charlottesville = 조용하고 아름다운 대학 도시. 파나마 출신 희소성 효과 있지만 공립 특성상 재정은 스스로 해결해야 함.',
     chemNote: '📜 UVA 화학과 연구 수준 상위권. 분석화학·합성화학 분야 우수. UVA 의대 연계 의화학 연구. 역사적 건축물 안에서의 학문 환경 특별. Pre-Med 화학 트랙 있음. 대형 학교라 교수 접근성 노력 필요.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Tufts': {
@@ -1258,6 +1561,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Boston 근교 사립 명문. Tufts 의대 + 세계적 병원 접근. 소규모(6,500명) 교수 접근성 우수. Need-Aware 재정 주의. 국제관계·Global Health 특화로 파나마 배경 꾸미에게 매력적. 합격률 ~9.7%로 선별적.',
     panamaNote: '📍 Need-Aware(국제학생). Boston 근교 = 세계 최고 의료 환경. 국제관계·Global Health 프로그램이 파나마 배경과 자연스럽게 연결. 파나마 출신 희소성 효과 있음. Tufts의 다문화·외교 감수성과 꾸미 프로필 잘 맞음.',
     chemNote: '🌿 Tufts 화학과는 소규모+우수 교수진 조합. Boston 인근 제약·바이오텍 인턴십 접근. Tufts 의대 연계 생화학 연구. Pre-Med 화학 트랙 탄탄. 대형 학교보다 교수 1:1 접근성 훨씬 좋음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'U of Michigan': {
@@ -1290,6 +1601,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '전미 최고 공립 중 하나 (\'Public Ivy\'). Michigan 의대 Top 10. EA 지원 가능(비서약). 국제학생 재정지원 제한적(공립). 대형(31,000명)이라 Pre-Med 내부 경쟁 치열. 학비 $53K(비거주민) 상대적 저렴하지만 재정지원 거의 없음.',
     panamaNote: '📍 공립 → 국제학생 재정지원 제한적. EA 지원 가능(비서약). Ann Arbor = 아름다운 대학 도시. Michigan 의대 Top 10. 파나마 출신 희소성 효과 있음. 대형 학교라 파나마 배경보다 성적·활동이 절대 우선.',
     chemNote: '🏆 Michigan 화학과 전국 Top 10. 합성화학·분광학·계산화학 분야 강함. Michigan 의대 연계 의화학 연구. 대학원 수준의 학부 연구 참여 기회. 단 대형 학교라 학부 단계 교수 접근성 노력 필요.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'UNC Chapel Hill': {
@@ -1322,6 +1641,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '미국 최초의 공립대(1789). UNC 의대 + Gillings 공중보건대학원 세계Top. 공립이라 국제학생 재정지원 사실상 없음. 학비 $45K(비거주민) 2그룹 중 저렴. Research Triangle 의료 환경 탁월. 국제학생 실질 합격률 낮음 주의.',
     panamaNote: '📍 공립 → 국제학생 재정지원 매우 제한적. Research Triangle = 세계적 의료·제약 허브. Gillings 공중보건 + 라틴아메리카 건강 연구. 파나마 배경을 공중보건 관심으로 연결 가능. 국제학생 합격률 매우 낮음 주의.',
     chemNote: '🌊 UNC 화학과 전국 상위권. 분석화학·방법론 분야 강함. Lineberger Cancer Center 연계 항암 화학 연구. Research Triangle 제약 인턴십 접근. Pre-Med 화학 트랙 있음. 공립 대비 높은 연구 수준.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   // ─────────────────────────────────────────
@@ -1358,6 +1685,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Georgetown과 유사한 가톨릭 예수회 대학. Boston 인근 세계적 병원 접근. Need-Aware 재정 주의. 합격률 ~16%로 접근 가능한 편. 파나마 가톨릭 배경(파나마는 가톨릭 국가)과 문화적 연결 가능. Pre-Med 환경 양호.',
     panamaNote: '📍 가톨릭 예수회 대학 — 파나마 가톨릭 문화권 배경과 자연스러운 연결. Need-Aware(국제학생) 재정 주의. Boston 인근 세계적 의료 환경. 라틴아메리카 사정관 평가. 파나마 출신 희소성 효과 있음.',
     chemNote: '⛪ BC 화학과는 Boston의 연구 생태계 속에서 성장. Dana-Farber Cancer Institute 등 인근 의료기관 연계 가능. Pre-Med 화학 트랙 있음. 소규모 대비 우수한 연구 환경. 교수 접근성 Emory·Tufts보다 약간 낮음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Boston University': {
@@ -1390,6 +1725,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '국제학생 비율 ~12%로 높아 파나마 희소성 상대적 낮음. 7년 BA/MD 프로그램 존재(국제학생 지원 적합성 확인 필요). Need-Aware 재정 주의. Boston 세계적 병원 환경. Pre-Med 내부 경쟁 있음.',
     panamaNote: '📍 Need-Aware(국제학생) + 국제학생 비율 12%로 희소성 낮음. Boston = 세계 최고 의료 환경. 7년 BA/MD 프로그램 관심 시 공식 확인 필요. 라틴아메리카 사정관 평가.',
     chemNote: '🏙️ BU 화학과는 Boston의 의료연구 생태계 내에서 강함. Rafik B. Hariri Institute for Computing 연계 계산화학. Pre-Med 화학 트랙 있음. Chobanian 의대 연계 의화학 연구 기회. 대형 학교라 교수 접근성 노력 필요.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Haverford': {
@@ -1422,6 +1765,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '초소규모(1,400명) 교수 1:1 접근성 최고. Swarthmore·Bryn Mawr Consortium으로 수업 선택 폭 확대. Quaker 협력·평화 문화. Philadelphia 인근 병원 접근. Need 100% 충족 정책으로 재정지원 후함. 꾸미 Pre-Med 목표에 강력 추천.',
     panamaNote: '📍 Quaker 평화·사회정의 전통 — 파나마 국제적 배경과 잘 맞음. Philadelphia 근교. 국제학생 재정지원 후한 편. 파나마 출신 희소성 효과 있음. 소규모에서 다양성 가치 크게 두드러짐.',
     chemNote: '🕊️ Haverford 화학과는 초소규모 LAC 최고 수준. Swarthmore·Bryn Mawr Consortium 화학 강의 공유. Phil 인근 Penn Medicine 연계 가능. 교수 1:1 연구 지도 독보적. Pre-Med 화학 트랙 탄탄. 꾸미에게 강력 추천하는 화학 환경.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Colby': {
@@ -1454,6 +1805,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Test-Free 영구 정책(2020~) — SAT 점수 완전히 관계없음. 에세이·활동·인터뷰 중심 평가. Need 100% 충족 정책 재정지원 후함. 메인주 시골 위치 — 도시 생활 제한. 꾸미 SAT와 무관하게 스토리로 승부하는 학교.',
     panamaNote: '📍 Test-Free → 파나마 국제학교 배경·에세이 스토리가 절대 핵심. Need 100% 충족. 메인주 위치 — 자연환경 탁월. 파나마 출신 희소성 효과 있음. 조용한 환경을 선호한다면 Colby는 좋은 선택.',
     chemNote: '🏔️ Colby 화학과는 소규모 LAC 내에서 환경화학·분석화학 강점. 메인 자연환경을 활용한 현장 화학 연구 독특. Pre-Med 화학 기초 탄탄. 교수 1:1 접근성 좋음. 단 도시 병원 접근 제한으로 임상 Pre-Med 환경은 약함.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Vassar': {
@@ -1486,6 +1845,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Seven Sisters 출신 공학(남녀공학 전환 1969). 소규모(2,450명) 교수 접근성 우수. Need 100% 충족 재정지원 후함. Pre-Med보다 인문·예술·교육 강한 분위기. NYC 2시간 거리. 꾸미 Pre-Med 목표에 우선순위 중간.',
     panamaNote: '📍 국제학생 Need-Aware이지만 합격 후 재정지원 후함. NYC 2시간. 다양성·예술·표현 중시 학교 문화 — 파나마 한인 다문화 스토리 환영. 파나마 출신 희소성 효과 있음.',
     chemNote: '🎨 Vassar 화학과는 소규모 LAC 내 우수. 분석화학·물리화학 分야. Pre-Med 화학 트랙 있음. NYC 근접성 활용한 외부 연구 인턴십 가능. 단 Pre-Med 중심보다 기초 과학 탐구 문화가 강함.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   // ─────────────────────────────────────────
@@ -1522,6 +1889,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ UC 공립 — 국제학생 재정지원 사실상 $0. 4년 총 비용 ~$280K~300K. UCSD 의대 Top 15 + Salk/Scripps 연구 환경 세계 최강. Test-Free. San Diego 기후 최고. 단 재정지원 없는 공립 비용은 사립 명문과 동급이므로 재정 재검토 필수.',
     panamaNote: '📍 UC 공립 → 국제학생 재정지원 $0. Test-Free → SAT 관계없음. San Diego = 라틴아메리카 문화 접점 강함(멕시코 국경 인접). 파나마 출신 희소성 있음. UCSD 의대 연계 Pre-Med 기회 탁월 — 단 비용이 문제.',
     chemNote: '🔱 UCSD 화학과 전국 Top 10. Salk Institute·Scripps Research 인접 — 세계 최고 생화학·구조생물학 연구 환경. Pre-Med 화학 트랙 우수. Nobel 수상자 다수 재직. 단 대규모 공립이라 학부 단계 교수 접근성 노력 필요.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'UIUC': {
@@ -1554,6 +1929,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ 국제학생 비율 ~22% — 파나마 희소성 극히 낮음. CS/공학 세계 최강. Pre-Med 목표와 방향 다름. Champaign = 조용한 대학 도시. 공립이라 학비 저렴($37K)하지만 재정지원 거의 없음. Carle Illinois 의대는 공학+의료 융합에 관심 있는 경우만.',
     panamaNote: '📍 공립 → 국제학생 재정지원 제한적. 국제학생 22%로 파나마 희소성 극히 낮음. CS/공학 방향이면 UIUC 비용 대비 최강. Pre-Med 목표 꾸미에게는 방향 안 맞음.',
     chemNote: '💻 UIUC 화학과 전국 Top 10 (특히 재료화학·계산화학). Carle Illinois 의대 연계 가능. 단 Pre-Med 화학 트랙보다 화학공학·재료과학 방향에 특화. 꾸미 화학+Pre-Med 목표와는 방향이 다소 달라.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'U of Florida': {
@@ -1586,6 +1969,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '2그룹 최저 학비($28K) — 비용 효율 최강. 국제학생 재정지원은 없지만 COA 자체가 낮음. UF 의대 + Shands Hospital 임상 환경 탁월. 플로리다 라틴아메리카·쿠바·파나마 커뮤니티 실질적. EA 가능.',
     panamaNote: '📍 공립 → 국제학생 재정지원 제한적. Gainesville = 플로리다 내륙 대학 도시. 플로리다 라틴아메리카(쿠바·멕시코·파나마) 커뮤니티 문화 접점 강함. Shands Hospital Pre-Med 임상 기회. 파나마 출신 희소성 효과 있음.',
     chemNote: '🐊 UF 화학과 전국 상위권. 특히 유기화학·신소재 분야 강함. UF Health 연계 의화학 연구. Gainesville 플로리다 기후 속 현장 환경 연구. Pre-Med 화학 트랙 있음. 2그룹 중 비용 대비 화학 교육 효율 최강.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Northeastern': {
@@ -1618,6 +2009,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ 국제학생 비율 ~18% — 파나마 희소성 극히 낮음. 합격률 ~6.8%로 급격히 선별적. Co-op 실습 특화(의료기관 실습 가능). Need-Aware 재정 주의. Boston 최고의 의료 환경. 비용 대비 효율성과 희소성 먼저 검토 필요.',
     panamaNote: '📍 Need-Aware + 국제학생 18%로 파나마 희소성 최저. Co-op 의료기관 실습은 파나마 배경보다 스펙이 절대 우선. Boston = 최고 의료 환경. 희소성 낮음을 감안해 지원 전략 신중히 검토.',
     chemNote: '🤝 Northeastern 화학과는 Co-op 연계 제약·바이오 실습 접근 탁월. Boston 인근 Pfizer·Biogen 인턴십. Pre-Med 화학 트랙 있음. Co-op으로 6개월 연구소 실습 가능 — 화학 연구 경험 쌓기에 독보적 환경.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Lehigh': {
@@ -1650,6 +2049,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '합격률 ~39%로 2그룹 중 접근 가능. 공학·비즈니스 특화로 Pre-Med 방향과 다소 다름. Need-Aware 재정 주의. Philadelphia 근교이지만 직접 병원 접근 제한. 꾸미 Pre-Med 목표에 우선순위 낮음.',
     panamaNote: '📍 합격률 높아 안전 지원 고려 가능. Need-Aware → 재정 불확실. Philadelphia 근교. 공학 방향이면 Lehigh 비용 효율 좋음. Pre-Med 목표 꾸미에게는 우선순위 낮음.',
     chemNote: '⚙️ Lehigh 화학과는 생체공학·재료화학 연계 강점. 소규모(5,500명)라 교수 접근성 좋음. Pre-Med 화학 트랙 있음. 단 의대 연계 환경이 약해 임상 경험 쌓기에 제한. Philadelphia 병원 접근 공학계열보다 약함.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Wake Forest': {
@@ -1682,6 +2089,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '✅ Pre-Med 목표 꾸미에게 추천! Wake Forest 의대 바로 연계 + Atrium 병원 인접. 소규모(5,500명) 교수 1:1 접근. Need-Aware 재정 주의. 합격률 ~20%로 접근 가능한 편. 2그룹 중단 중 Pre-Med 환경 최강.',
     panamaNote: '📍 Need-Aware(국제학생). Winston-Salem = 북캐롤라이나 종합병원 도시. Wake Forest 의대 + Atrium 병원 연계로 Pre-Med 임상 환경 탁월. 파나마 출신 희소성 효과. Research Triangle 근접.',
     chemNote: '🌲 Wake Forest 화학과는 소규모+우수 교수진. Wake Forest 의대 연계 생화학·의화학 연구. Pre-Med 화학 트랙 탄탄. Atrium 병원 임상 연계 화학 연구 가능. 교수 1:1 접근성 탁월. 꾸미 Pre-Med 화학 목표에 매우 잘 맞음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Villanova': {
@@ -1714,6 +2129,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '가톨릭 대학 (Georgetown·BC와 유사). Philadelphia 근교 세계적 병원 접근. 합격률 ~28%로 접근 가능. Need-Aware 재정 주의. 파나마 가톨릭 배경과 문화적 연결. Pre-Med 환경 적당. 안전 지원 고려 가능.',
     panamaNote: '📍 가톨릭 아우구스티노회 — 파나마 가톨릭 배경과 자연스러운 연결. Philadelphia 근교 Penn Medicine·CHOP 접근. Need-Aware → 재정 불확실. 국제학생 비율 낮아 파나마 희소성 효과. EA 지원 가능.',
     chemNote: '📿 Villanova 화학과는 소규모 환경에서 교수 접근성 우수. Philadelphia 인근 Penn Medicine 연계 가능. 제약·생화학 분야 인턴십 접근. Pre-Med 화학 트랙 있음. 가톨릭 대학 환경의 학문적 엄격함과 공동체 문화.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   // ─────────────────────────────────────────
@@ -1750,6 +2173,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ UC 공립 재정지원 $0. 4년 총비용 ~$275K~290K. UCI 의대 연계 Pre-Med 환경 우수. Test-Free. Orange County 기후 훌륭. 아시아계 학생 매우 많아 Pre-Med 내부 경쟁 특히 치열. 재정 재검토 필수.',
     panamaNote: '📍 UC 공립 → 재정지원 $0. Test-Free. Orange County = 아시아계·라틴계 커뮤니티 혼재. 파나마 출신 희소성 있음. UCI 의대 연계 Pre-Med 기회 탁월 — 단 비용 문제.',
     chemNote: '🐜 UCI 화학과 전국 상위권. Nobel 수상자 출신 다수 (F. Sherwood Rowland — 오존층 연구). 환경화학·물리화학 세계적 수준. Pre-Med 화학 트랙 있음. 단 대규모 공립이라 학부 단계 교수 접근성 노력 필요.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'U of Rochester': {
@@ -1782,6 +2213,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '소규모(6,500명) + UR Medical Center 직접 연계 → Pre-Med 환경 강함. Take 5 프로그램(1년 무료 추가 수강) 독특. Need-Aware 재정 주의. 합격률 ~29%로 접근 가능. 국제학생 비율 12% 주의.',
     panamaNote: '📍 Need-Aware(국제학생). Rochester 소도시 환경. UR 의대 연계 Pre-Med 임상 기회. 파나마 출신 희소성 있음. Eastman 음대로도 유명 — 음악 관심 있으면 추가 메리트.',
     chemNote: '🎶 Rochester 화학과는 소규모+우수 교수진. UR 의대 연계 의화학 연구. 레이저·광학화학 분야 강함 (Institute of Optics 연계). Pre-Med 화학 트랙 탄탄. 교수 1:1 접근성 좋음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'U of Washington': {
@@ -1814,6 +2253,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '공립 — 국제학생 재정지원 제한적. UW 의대 전국 Top 5 (1차 의료) + Seattle Children\'s 임상 환경. 국제학생 비율 13% 주의. Seattle = Amazon·Microsoft 테크 허브. 학비 상대적 저렴($42K)하지만 Seattle 생활비 높음.',
     panamaNote: '📍 공립 → 국제학생 재정지원 제한적. 국제학생 13%로 희소성 낮음. UW 의대 1차 의료 Top 5 — 파나마 공중보건 관심 연결 가능. Seattle 아시아·라틴계 커뮤니티. 파나마 출신 희소성 상대적 낮음 주의.',
     chemNote: '☔ UW 화학과 전국 Top 5 (특히 나노화학·바이오화학). Paul G. Allen School(CS)과 화학 융합 연구. UW 의대 연계 의화학 연구. Pre-Med 화학 트랙 있음. 단 대형 공립이라 학부 단계 교수 접근성 노력 필요.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Grinnell': {
@@ -1846,6 +2293,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Endowment 초강력(학생당 $1.4M — Williams·Amherst 수준). 재정지원 매우 후함. 소규모(1,800명) 자율 교육. Iowa 시골 위치 — 도시 생활 없음. Pre-Med 목표면 임상 접근 어렵지만 기초 화학·생물학 탁월. 꾸미 재정지원 필요 시 고려 가치 있음.',
     panamaNote: '📍 Endowment 기반 재정지원 후함 → 파나마 배경 국제학생에게 좋은 조건. Iowa 시골 = 조용한 학문 환경. Test-Optional. 파나마 출신 희소성 효과 있음. 에세이·스토리 중심 평가.',
     chemNote: '🌾 Grinnell 화학과는 소규모 LAC 최고 수준. 초강력 endowment로 화학 장비·연구비 매우 풍부. 교수 1:1 연구 지도 독보적. Pre-Med 화학 기초 탄탄. 단 Iowa 위치로 의료기관 실습 제한 — 화학 이론+실험에 집중해야 함.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Brandeis': {
@@ -1878,6 +2333,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ 국제학생 비율 ~19% — 파나마 희소성 낮음. Boston 근교 세계 최고 병원 접근. 소규모(3,600명) 교수 접근성 우수. Need-Aware 재정 주의. 합격률 ~38%로 접근 가능. 진보·국제 감수성 학문 문화.',
     panamaNote: '📍 국제학생 19%로 희소성 낮음. Boston 근교 세계적 의료 환경. 유대 전통이지만 모든 배경 학생 환영. 국제감수성 강한 학문 문화 — 파나마 다문화 배경과 맞음.',
     chemNote: '📖 Brandeis 화학과는 소규모+연구 중심. Boston 인근 제약·바이오 인턴십 접근. 생화학·분자화학 분야 강함. Pre-Med 화학 트랙 있음. 진보적 학문 문화에서의 실험적 화학 연구.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Bucknell': {
@@ -1910,6 +2373,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '소규모 공학·문리 대학. 합격률 ~35%로 접근 가능. Need-Aware 재정 주의. Pre-Med 환경 보통. Lewisburg 시골 위치 — 도시 생활 없음. 꾸미 Pre-Med 목표에 우선순위 낮음.',
     panamaNote: '📍 Need-Aware. Lewisburg 소도시. 국제학생 비율 낮아 파나마 희소성 효과 있음. 공학 방향이면 Bucknell 비용 효율 양호. Pre-Med 꾸미에게는 우선순위 낮음.',
     chemNote: '🦬 Bucknell 화학과는 소규모 환경에서 교수 접근성 좋음. 화학공학·생체공학 연계 강점. Pre-Med 화학 기초 있음. 단 의대 연계 없어 임상 접근 제한. 펜실베이니아 중부 환경의 현장 화학 연구.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'U of Georgia': {
@@ -1942,6 +2413,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '미국 최초의 공립대(1785). 합격률 ~40%로 접근 쉬움. 학비 저렴($31K). 재정지원 없음. Emory 근처 Atlanta 의료 생태계 간접 접근. 꾸미에게 안전 지원 고려 가능. CDC + Emory 근접.',
     panamaNote: '📍 공립 → 재정지원 제한적. 학비 저렴. Athens = Atlanta 동쪽 1시간. 조지아 라틴아메리카 커뮤니티. 파나마 출신 희소성 있음. 안전 지원으로 고려 가능.',
     chemNote: '🐾 UGA 화학과 전국 중상위권. 농업화학·환경화학 분야 특색. Pre-Med 화학 트랙 있음. Atlanta 의료·제약 인턴십 간접 접근 가능. 합격률 높아 접근 가능한 화학 연구 환경.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'U of Wisconsin': {
@@ -1974,6 +2453,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '전미 최고 공립 연구대학 중 하나. UW 의대 + WARF 연구 재원 강력. 합격률 ~49%로 접근 쉬움. 공립 재정지원 없음. Madison = 아름다운 호수 도시. 겨울 추위 매우 심함. Pre-Med 환경 양호.',
     panamaNote: '📍 공립 → 재정지원 제한적. Madison 호수 도시. Wisconsin 겨울 극한 추위 주의. UW 의대 연계 Pre-Med 기회. 파나마 출신 희소성 효과. 합격률 높아 안전 지원 가능.',
     chemNote: '❄️ UW-Madison 화학과 전국 Top 10 (특히 유기화학·방법론). WARF 연구 재원으로 학부 연구 기회 풍부. Pre-Med 화학 트랙 있음. UW 의대 연계 의화학 연구. 단 대형 학교라 교수 접근성 노력 필요.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Florida State': {
@@ -2006,6 +2493,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '최저 수준 학비($21K) — 비용 압도적 절감. 재정지원 없지만 COA 자체가 매우 낮음 (~$45K). Pre-Med 환경은 UF보다 약함. FSU 의대 있음. 꾸미 안전 지원 + 극히 낮은 비용 고려 시 유효.',
     panamaNote: '📍 공립 학비 최저. Tallahassee = 플로리다 주도(政都). 라틴아메리카 커뮤니티 있음. 재정지원 거의 없지만 총비용 자체가 낮음. Pre-Med 환경 보통. 안전 지원 + 경제적 선택.',
     chemNote: '🔥 FSU 화학과는 전국 상위권 (특히 고분자화학·재료화학). National High Magnetic Field Laboratory(세계 최강 자기장 연구소) 바로 인접 — 이 분야에서는 세계 유일. Pre-Med 화학 트랙 있음. 학비 대비 연구 환경 좋음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Case Western Reserve': {
@@ -2038,6 +2533,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '✅ Pre-Med 목표 꾸미에게 강력 추천! Cleveland Clinic(세계 Top 3) 바로 접근. PPSP BS/MD 보장 프로그램 (국제학생 지원 여부 확인 필수). 합격률 ~27%로 접근 가능. Need-Aware 재정 주의. Pre-Med 환경 2그룹 하단 최강.',
     panamaNote: '📍 Need-Aware(국제학생). Cleveland Clinic 세계 Top 3 병원 바로 인접. PPSP BS/MD 프로그램 국제학생 적합성 확인 필수. 파나마 출신 희소성 있음. Pre-Med 화학 환경 탁월.',
     chemNote: '🏥 CWRU 화학과는 Cleveland Clinic 연계 의화학·생화학 연구 세계 최강. Nobel 수상자 출신 다수. Pre-Med 화학 트랙 탁월. 의공학·생체재료 분야도 세계적. 하단 중 Pre-Med 화학 환경 최강.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '이과 최상위 성적 필수. Cleveland Clinic 연계 Pre-Med는 엄격한 학업 기준' },
+      { label: 'Pre-Med 헌신', weight: '핵심', note: '병원 봉사·쉐도잉·연구 경험 필수. Cleveland Clinic 관심 어필 매우 도움' },
+      { label: '에세이', weight: '높음', note: 'PPSP 지원 시 의학 소명과 Cleveland Clinic 연계 비전 서술이 핵심' },
+      { label: '추천서', weight: '높음', note: '과학 교사+카운슬러. 연구 잠재력과 의료 부문 헌신 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '선택 제출이지만 PPSP 지원 시 1540+ 권장' },
+      { label: 'PPSP 인터뷰', weight: '핵심', note: 'PPSP 지원 시 인터뷰 필수. 의학적 소명·윤리적 사고·성숙도 평가' },
+    ],
   },
 
   'NC State': {
@@ -2070,6 +2573,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '공학·STEM 특화 (공립). Pre-Med 방향 약함. 학비 저렴($29K). 재정지원 없음. Research Triangle 인근 의료·제약 허브. 합격률 ~42%로 안전 지원. 꾸미 Pre-Med 목표에는 우선순위 낮음.',
     panamaNote: '📍 공립 → 재정지원 제한적. Research Triangle = 세계 의료·제약 허브 인근. Raleigh 성장하는 도시. 파나마 희소성 있음. 공학 방향이면 NC State 비용 효율 좋음. Pre-Med 목표에는 약함.',
     chemNote: '🐺 NC State 화학과는 재료화학·분석화학 강점. Research Triangle 제약 인턴십 접근 가능. Pre-Med 화학 기초 있음. 단 UNC Chapel Hill 화학과보다 Pre-Med 연계 약함. 학비 대비 연구 환경 양호.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'William & Mary': {
@@ -2102,6 +2613,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '미국에서 두 번째로 오래된 역사 명문(1693). 공립이지만 소규모(6,200명) 사립급 학문 환경. 버지니아주 공립이라 재정지원 제한. 법학·국제관계 강함. Pre-Med 환경 양호. Williamsburg = 역사 관광 도시.',
     panamaNote: '📍 공립 → 재정지원 제한적. Williamsburg 역사 도시 — 조용하고 아름다움. 법학·국제관계 전통 — 파나마 국제적 배경과 연결 가능. 파나마 희소성 있음. Pre-Med 목표에 중간 우선순위.',
     chemNote: '🏰 W&M 화학과는 소규모 공립의 강점. 교수 접근성 사립급. Pre-Med 화학 트랙 있음. 역사적 캠퍼스 환경에서의 기초 화학 탄탄. Eastern Virginia Medical School 배경으로 의화학 연구 간접 접근.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'UCSB': {
@@ -2134,6 +2653,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ UC 공립 재정지원 $0. 4년 총비용 ~$280K~295K. Nobel 수상자 6명 재직 기초과학 최강. Test-Free. Santa Barbara 해안 — 최고의 캠퍼스 환경. Pre-Med 직접 연계는 약함. 재정 재검토 필수.',
     panamaNote: '📍 UC 공립 → 재정지원 $0. Test-Free. Santa Barbara 아름다운 해안 — 파나마 해안 출신에게 친숙한 자연환경. 환경·해양과학 관심 시 세계 최강. 단 재정 문제. 파나마 희소성 있음.',
     chemNote: '🏖️ UCSB 화학과 전국 Top 10 (특히 재료화학·나노화학 — Nobel 수상자 多). Kavli Institute for Theoretical Physics 연계. Pre-Med 화학 트랙 있음. 단 의대 직접 연계보다 순수 기초과학 화학 환경. 세계 최고 해안 환경에서의 환경화학 독특.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   // ─────────────────────────────────────────
@@ -2170,6 +2697,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '공학·STEM 세계 최강(Neil Armstrong·우주비행사 다수 출신). 국제학생 비율 18%로 희소성 낮음. Pre-Med 환경 약함. 학비 저렴($29K). 공립 재정지원 없음. 꾸미 Pre-Med 목표에는 우선순위 낮음.',
     panamaNote: '📍 공립 → 재정지원 제한적. 국제학생 18%로 파나마 희소성 낮음. West Lafayette = 공학 대학 도시. 공학 방향이면 Purdue 비용 효율 탁월. Pre-Med 목표에는 부적합.',
     chemNote: '🚀 Purdue 화학과 전국 상위권. 특히 분석화학·화학공학 연계 강함. 항공우주·재료 분야 연구 연계 독특. Pre-Med 화학 트랙 있음. 단 Pre-Med보다 공학화학 방향에 특화.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'George Washington': {
@@ -2202,6 +2737,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'DC 위치(Georgetown과 유사 입지). 합격률 41%로 접근 가능. GW 의대 연계 Pre-Med 환경 양호. Need-Aware 재정 주의. COA ~$87K(DC 생활비). 정치·보건 정책 관심이라면 DC 환경 탁월.',
     panamaNote: '📍 DC 위치 — 파나마 외교·보건 정책 연결. Georgetown보다 접근 쉬운 DC 사립. Need-Aware → 재정 불확실. 파나마 출신 희소성 있음. FMI·세계보건기구 DC 사무소 접근.',
     chemNote: '🏛️ GWU 화학과는 DC 위치 활용 NIH·FDA 인턴십 접근 탁월. Pre-Med 화학 트랙 있음. 정부·정책 연계 화학 연구 독특. 합격률 높아 접근 가능한 화학 환경.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Texas A&M': {
@@ -2234,6 +2777,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '전미 최대급 공립(57,000명). 합격률 ~63%로 안전 지원. 학비 저렴($37K). 공립 재정지원 없음. Pre-Med 환경 보통. College Station = 작은 대학 도시. 꾸미 안전 지원 최후방 고려.',
     panamaNote: '📍 공립 → 재정지원 제한적. College Station 소도시. 텍사스 히스패닉 커뮤니티. 파나마 희소성 있음. 합격률 높아 안전 지원가능. Texas Medical Center(Houston) 접근 2시간.',
     chemNote: '🐴 Texas A&M 화학과는 전국 상위권. 석유화학·재료화학 분야 세계적 (텍사스 석유 산업 연계). Pre-Med 화학 트랙 있음. 초대형 학교라 학부 연구는 경쟁적이지만 기회 풍부.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'UMD College Park': {
@@ -2266,6 +2817,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'DC 근교(30분) + NIH 인접 — Pre-Med 연구 환경 독보적. 공립 재정지원 없음. 합격률 ~44%. 학비 $40K. CS·공학·비즈니스도 강함. NIH 인턴십이 Pre-Med 목표에 핵심 자산.',
     panamaNote: '📍 DC·NIH 30분 — 파나마 출신 공중보건·연구 관심에 최적. 공립 재정지원 제한. 메릴랜드 라틴아메리카 커뮤니티. 파나마 희소성 있음. NIH 실습 기회 독보적.',
     chemNote: '🐢 UMD 화학과 전국 상위권. NIH·NIST(국립표준기술연구소) 인근 협업 기회 독보적. 생화학·분석화학·계산화학 강함. Pre-Med 화학 트랙 있음. DC 근교라 정부 연구기관 연계 화학 경험 쌓기 최적.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Ohio State': {
@@ -2298,6 +2857,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '전미 최대급 공립. Wexner 의대 병원 Top 15. 합격률 ~53%로 쉬운 안전 지원. 공립 재정지원 없음. 학비 $37K. 초대형이라 교수 접근성 낮음. Columbus 중부 대도시.',
     panamaNote: '📍 공립 → 재정지원 제한적. Columbus = 오하이오 중부. Wexner 의대 병원 Pre-Med 기회. 합격률 높아 안전 지원. 파나마 희소성 있음.',
     chemNote: '🌰 OSU 화학과 전국 상위권. 고분자화학·재료화학 강함. Wexner 의대 연계 의화학 연구. Pre-Med 화학 트랙 있음. 대형 학교라 연구 기회 많지만 교수 접근성은 경쟁적.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Santa Clara': {
@@ -2330,6 +2897,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Silicon Valley 중심부 — 의료테크·바이오텍 스타트업 접근 독보적. 가톨릭 예수회(파나마 가톨릭 연결). 합격률 ~51%로 접근 쉬움. COA ~$88K(SV 생활비 매우 높음). Stanford 인근.',
     panamaNote: '📍 가톨릭 예수회 — 파나마 가톨릭 배경 연결. Silicon Valley = 의료테크·AI 허브. Need-Aware → 재정 불확실. SV 생활비 매우 높음 주의. 파나마 희소성 있음.',
     chemNote: '💡 Santa Clara 화학과는 소규모+Silicon Valley 연계. 바이오테크·의료테크 화학 인턴십 접근 독보적. Stanford·Google·Apple 인근. Pre-Med 화학 트랙 있음. SV 스타트업 연계 화학 실습 가능.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   // ─────────────────────────────────────────
@@ -2366,6 +2941,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Baptist 기독교 대학. Baylor Scott & White 병원 연계 Pre-Med. 합격률 ~45%. Need-Aware 재정 주의. Waco = 텍사스 중부 소도시. 종교적 분위기 강함. 꾸미 Pre-Med 목표에 중간 우선순위.',
     panamaNote: '📍 Baptist 기독교 — 종교적 문화 배경 확인 필요. Waco 소도시. Texas 히스패닉 커뮤니티. Need-Aware → 재정 불확실. Baylor 병원 Pre-Med 임상 기회.',
     chemNote: '🐻 Baylor 화학과는 소규모 환경 교수 접근성 우수. Baylor 병원 연계 의화학 연구. Pre-Med 화학 트랙 있음. Baptist 기독교 문화 속 학문 환경.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'UC Davis': {
@@ -2398,6 +2981,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ UC 공립 재정지원 $0. Test-Free. UC Davis 의대 연계. 농업·수의학 세계 최강. Davis = 조용한 대학 도시. 재정 재검토 필수.',
     panamaNote: '📍 UC 공립 → $0. Test-Free. Davis 조용한 환경. Sacramento 인근. UC Davis 의대 Pre-Med 기회. 농업·식품과학 관심 있다면 세계 최강.',
     chemNote: '🐄 UC Davis 화학과 전국 상위권. 농업화학·식품화학·환경화학 분야 세계적. Pre-Med 화학 트랙 있음. UC 계열 높은 연구 수준. Test-Free.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'SMU': {
@@ -2430,6 +3021,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '학비 비쌈($68K). Neo-Gothic 아름다운 캠퍼스. Dallas 대도시 병원 접근. Pre-Med 환경 보통. 비즈니스·법학 강함. 꾸미 Pre-Med 목표에 우선순위 낮음.',
     panamaNote: '📍 Dallas = 텍사스 히스패닉 커뮤니티 중심. Need-Aware → 재정 불확실. 비즈니스·법학 관심이면 SMU 네트워크 좋음. Pre-Med 목표에는 약함.',
     chemNote: '🤠 SMU 화학과는 중간 수준. Dallas 제약·의료 산업 인턴십 접근. Pre-Med 화학 트랙 있음. 단 연구 수준은 3그룹 상위 학교보다 낮음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Rose-Hulman': {
@@ -2462,6 +3061,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '❌ Pre-Med 목표와 방향 완전히 다름. 학부 공학교육 전국 #1. 화학공학 방향이면 Rose-Hulman은 세계 최고. Pre-Med 목표 꾸미에게는 부적합.',
     panamaNote: '📍 공학 최강. Pre-Med 방향 아님. Terre Haute = 인디애나 소도시. 파나마 희소성 있음. 공학 방향 전환 시 Rose-Hulman 탁월.',
     chemNote: '⚗️ Rose-Hulman 화학공학과 전국 #1 수준. 단 Pre-Med 화학 트랙 없음. 화학공학·재료공학 방향. 꾸미 Pre-Med+화학 목표와 방향 다름.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Penn State': {
@@ -2494,6 +3101,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '전미 최대급 공립(60,000명). 합격률 ~54%. Hershey 의대 연계. 공립 재정지원 없음. University Park = 소도시. 꾸미 안전 지원 최후방 고려. Pre-Med 환경 보통.',
     panamaNote: '📍 공립 → 재정지원 제한적. 초대형 학교. Hershey 의대 연계 Pre-Med. 파나마 희소성 있음. 합격률 높아 안전 지원 가능.',
     chemNote: '🦁 Penn State 화학과는 전국 상위권. 재료화학·고분자화학 강함. Hershey 의대 연계 의화학. Pre-Med 화학 트랙 있음. 대형 학교라 연구 기회 많음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Rutgers NB': {
@@ -2526,6 +3141,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'NYC 1시간 거리. Rutgers 의대 연계 Pre-Med 환경. 합격률 ~61% 안전 지원. 학비 저렴($34K). 공립 재정지원 없음. NYC 병원 간접 접근. 꾸미 안전 지원 고려.',
     panamaNote: '📍 NYC 1시간. Rutgers 의대 연계. 공립 재정지원 제한. 뉴저지 히스패닉 커뮤니티. 파나마 희소성 있음. 안전 지원 가능.',
     chemNote: '🌿 Rutgers 화학과 전국 상위권. 유기화학·생화학 분야 강함. Rutgers 의대 연계 의화학 연구. NYC 인근 제약 인턴십(Pfizer NJ 본사 인근) 접근. Pre-Med 화학 트랙 있음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Stony Brook': {
@@ -2558,6 +3181,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '학비 매우 저렴($28K). Stony Brook 의대 연계. NYC 1시간. 국제학생 비율 14% 주의. 공립 재정지원 없음. 3그룹 중 비용 효율 최강군. 꾸미 안전+경제적 선택.',
     panamaNote: '📍 학비 최저급. NYC 1시간. Long Island 환경. 공립 재정지원 제한. 국제학생 14%로 희소성 낮음. Stony Brook 의대 Pre-Med 기회.',
     chemNote: '🏝️ Stony Brook 화학과 전국 상위권. 물리화학·나노화학 강함 (Brookhaven National Laboratory 인근). Pre-Med 화학 트랙 있음. 국립연구소 협업 기회 독특.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Virginia Tech': {
@@ -2590,6 +3221,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '공학·건축 특화. Pre-Med 환경 보통. 합격률 ~65% 안전 지원. 학비 저렴($34K). 공립 재정지원 없음. Blacksburg 산악 소도시 — 도시 생활 없음.',
     panamaNote: '📍 공립 → 재정지원 제한적. Blacksburg 산악 소도시. 자연환경 탁월. 공학 방향이면 VT 비용 효율 좋음. Pre-Med 목표에는 약함.',
     chemNote: '🦃 Virginia Tech 화학과는 중상위권. 재료화학·환경화학 강함. VTC 의대 연계 의화학 연구. Pre-Med 화학 트랙 있음. 산악 자연환경 연계 환경화학 연구 독특.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Cal Poly SLO': {
@@ -2622,6 +3261,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '학비 극히 저렴($20K). 공학·농업 특화. Pre-Med 환경 없음. SLO = 아름다운 해안 소도시. 꾸미 Pre-Med 목표와 방향 다름. 비용 극절감 고려 시에만 유효.',
     panamaNote: '📍 CSU 공립 최저 학비. Pre-Med 방향 아님. SLO 해안 소도시. 파나마 희소성 있음. 공학/농업 방향이면 비용 효율 최강.',
     chemNote: '🌾 Cal Poly SLO 화학과는 실습 중심 교육. 농업화학·환경화학 특화. Pre-Med 화학 트랙 약함. 학비 대비 실습 교육은 탁월.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'UMass Amherst': {
@@ -2654,6 +3301,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'Five College Consortium으로 인근 5개 대학 수업 공유 독특. 합격률 ~64% 안전 지원. 공립 재정지원 없음. Amherst 농촌 환경. Pre-Med 환경 보통. New England 단풍 환경.',
     panamaNote: '📍 공립 → 재정지원 제한적. Five College Consortium 수업 다양성. Boston 2시간. Amherst 농촌 소도시. 파나마 희소성 있음. 안전 지원 고려.',
     chemNote: '🍁 UMass Amherst 화학과 전국 상위권 (특히 고분자화학 — James Rathman Nobel 라인). Five College Consortium 화학 강의 공유. Pre-Med 화학 트랙 있음. 농촌 뉴잉글랜드 환경의 환경화학.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   // ─────────────────────────────────────────
@@ -2690,6 +3345,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: 'UMN 의대 상위권. Twin Cities 대도시. 공립 재정지원 없음. 학비 $36K. Minnesota 겨울 극한 추위(-20°C) 주의. Pre-Med 환경 양호. 안전 지원 고려.',
     panamaNote: '📍 공립 → 재정지원 제한적. Twin Cities 대도시. M Health 병원 Pre-Med 기회. Minnesota 겨울 매우 추움 — 파나마 출신에게 극한 환경 적응 필요. 파나마 희소성 있음.',
     chemNote: '⛄ UMN 화학과 전국 상위권. 유기화학·재료화학·계산화학 강함. UMN 의대 연계 의화학 연구. Pre-Med 화학 트랙 있음. 학비 대비 화학 교육 효율 좋음.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'UC Santa Cruz': {
@@ -2722,6 +3385,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ UC 공립 재정지원 $0. Test-Free. 기초과학·환경과학 강함. Pre-Med 환경 약함. Santa Cruz 해안 아름다운 환경. 재정 재검토 필수. 꾸미 Pre-Med 목표에 우선순위 낮음.',
     panamaNote: '📍 UC 공립 → $0. Test-Free. Santa Cruz = Silicon Valley 남쪽 해안. 환경과학·생태학 세계적. Pre-Med 약함. 파나마 해안 출신 친숙한 자연환경.',
     chemNote: '🌊 UCSC 화학과는 환경화학·해양화학 분야 특화. Silicon Valley 인근 바이오텍 접근 가능. Pre-Med 화학 트랙 있음. 단 의대 연계 약함.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'UC Riverside': {
@@ -2754,6 +3425,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '⚠️ UC 공립 재정지원 $0. UC계열 중 가장 접근 쉬움(66%). UCR 의대 연계. Test-Free. Riverside 내륙 도시 — 무더운 기후. 재정 재검토 필수. 꾸미 안전 지원 최후방.',
     panamaNote: '📍 UC 공립 → $0. Test-Free. UC 계열 입학 가장 쉬움. UCR 의대 연계. Riverside 내륙 더운 기후 — 파나마 출신에게 친숙한 열기. 파나마 희소성 있음.',
     chemNote: '🍊 UCR 화학과는 환경화학·농업화학 분야 강함 (Inland Empire 농업 지역 연계). UCR 의대 연계 의화학 연구. Pre-Med 화학 트랙 있음. UC 계열 중 접근 가장 쉬운 화학 연구 환경.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Michigan State': {
@@ -2786,6 +3465,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '합격률 ~88%으로 거의 확실한 안전 지원. 공립 재정지원 없음. 농업·수의학 세계 최강. Pre-Med 환경 보통. MSU 의대 연계. 꾸미 최후방 안전 지원.',
     panamaNote: '📍 공립 → 재정지원 제한적. East Lansing. 합격률 88%로 안전. MSU 의대 연계. 농업·식품과학 파나마 농업 연결 가능. 파나마 희소성 있음.',
     chemNote: '🌱 MSU 화학과는 농업화학·식품화학·환경화학 세계적. MSU 의대 연계 의화학 연구. Pre-Med 화학 트랙 있음. 학비 대비 연구 기회 양호.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 
   'Cal Poly Pomona': {
@@ -2818,6 +3505,14 @@ const schoolDB: Record<string, SchoolDetail> = {
     kkumiNote: '학비 극히 저렴($15K) — 4년 총비용 ~$150K대. Pre-Med 환경 없음. 공학·건축 특화. LA 근교. 꾸미 Pre-Med 목표와 방향 완전히 다름. 비용 절대 우선이라면 최후 선택지.',
     panamaNote: '📍 CSU 최저 학비. LA 근교. Pre-Med 방향 아님. 파나마 희소성 있음. 비용 절대 우선이라면 고려 가능. Pre-Med 목표에는 부적합.',
     chemNote: '🌵 Cal Poly Pomona 화학과는 실습 중심. Pre-Med 화학 트랙 약함. LA 인근 제약·바이오 간접 접근. 학비 대비 실습 교육 가능. 꾸미 Pre-Med+화학 목표에는 방향 다름.',
+    evalCriteria: [
+      { label: 'GPA / 학업성취', weight: '핵심', note: '최상위 성적 필수. 도전적 과목 이수 중요' },
+      { label: '에세이', weight: '높음', note: '개인 서사와 학교 커뮤니티 fit을 보여주는 에세이 필수' },
+      { label: '과외활동', weight: '높음', note: '깊이 있는 활동과 커뮤니티 기여 증거' },
+      { label: '추천서', weight: '중간', note: '교사+카운슬러 추천서. 학문적 능력과 인성 서술' },
+      { label: 'SAT/ACT', weight: '중간', note: '학교 정책에 따라 중요도 다름. 제출 시 상위권 권장' },
+      { label: '다양성', weight: '중간', note: '파나마 출신 희소성이 지역 다양성 측면에서 긍정적 요소' },
+    ],
   },
 };
 
@@ -2958,6 +3653,179 @@ const preMedColors: Record<string, string> = {
 };
 
 // ────────────────────────────────────────────────
+//  CDS (Common Data Set) C7 원본 데이터 — 1 Group
+// ────────────────────────────────────────────────
+type CdsRating = 'VI' | 'I' | 'C' | 'NC';
+type AwardsLevel = '★★★' | '★★' | '★' | '—';  // 수상이력 중요도 (비공식)
+type CdsRow = {
+  school: string;
+  tier: string;
+  year: string;
+  satPolicy: string;
+  factors: {
+    rigor: CdsRating;          // 고교 커리큘럼 난이도
+    classRank: CdsRating;      // 학급 석차
+    gpa: CdsRating;            // 내신 GPA
+    testScores: CdsRating;     // SAT/ACT
+    essay: CdsRating;          // 에세이
+    recs: CdsRating;           // 추천서
+    interview: CdsRating;      // 인터뷰
+    extracurricular: CdsRating;// 과외활동
+    talent: CdsRating;         // 특별한 재능
+    character: CdsRating;      // 인격/품성
+    firstGen: CdsRating;       // 1세대 대학생
+    alumni: CdsRating;         // 동문 자녀
+    geo: CdsRating;            // 지역 다양성
+    stateRes: CdsRating;       // 주 거주자
+    religion: CdsRating;       // 종교
+    race: CdsRating;           // 인종/다양성
+    volunteer: CdsRating;      // 봉사활동
+    work: CdsRating;           // 직업 경험
+    interest: CdsRating;       // 지원 관심도
+  };
+  awardsEmphasis: AwardsLevel; // 수상이력 중요도 (비공식 보조 지표)
+  awardsNote: string;          // 어떤 수상이 특히 유효한지
+  sourceUrl: string;
+};
+
+const cdsGroup1: CdsRow[] = [
+  { school:'MIT', tier:'최상1', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★★', awardsNote:'수학·물리·화학 올림피아드(국제/국가), ISEF, Intel STS, Regeneron 수상이 매우 강력한 차별화 요소. USACO Platinum, AMC/AIME 고득점도 유효',
+    sourceUrl:'https://web.mit.edu/ir/cds' },
+  { school:'Caltech', tier:'최상1', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★★', awardsNote:'수학·물리·화학 국제올림피아드(IMO/IPhO/IChO) 국가대표 수준 수상이 압도적 강점. ISEF 수상 및 학술 출판도 강력히 유효',
+    sourceUrl:'https://www.caltech.edu/about/ir/cds' },
+  { school:'Stanford', tier:'최상1', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'NC', geo:'I', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'I', interest:'NC' },
+    awardsEmphasis:'★★★', awardsNote:'올림피아드·Regeneron·Siemens 등 국가/국제 수준 수상이 강점. 단 수상 단독보다 에세이와 연계된 스토리텔링이 필수',
+    sourceUrl:'https://irds.stanford.edu/cds' },
+  { school:'Harvard', tier:'최상2', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'VI', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'VI', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'I', geo:'I', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'I', interest:'NC' },
+    awardsEmphasis:'★★★', awardsNote:'국가/국제 수준 학문·예술·리더십 수상이 강점. 단순 교내 수상보다 외부 공신력 있는 국제대회 수상이 훨씬 중요',
+    sourceUrl:'https://oir.harvard.edu/cds' },
+  { school:'Yale', tier:'최상2', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'VI', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'VI', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'C', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★★', awardsNote:'학문 수상뿐 아니라 예술·음악·문학·변론 대회 수상도 유효. Yale은 전인격적 평가라 다양한 분야 수상 모두 강점',
+    sourceUrl:'https://oira.yale.edu/cds' },
+  { school:'Princeton', tier:'최상2', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'VI', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'VI', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'C', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★★', awardsNote:'학문·연구 수상이 강력. Princeton은 학부 Thesis 문화라 연구 경쟁력을 증명하는 수상이 특히 유효',
+    sourceUrl:'https://ir.princeton.edu/cds' },
+  { school:'Columbia', tier:'상1', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'VI', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'국가/국제 수준 수상이 도움되지만 Columbia는 에세이·리더십 비중이 더 높음. 수상 단독보단 활동의 깊이가 더 중요',
+    sourceUrl:'https://ir.columbia.edu/cds' },
+  { school:'U of Chicago', tier:'상1', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'I', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'NC', geo:'I', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'학문적 수상(올림피아드·연구대회)이 도움되지만 UChicago는 독창적 에세이와 지적 호기심이 최우선. 수상보다 사고의 깊이가 핵심',
+    sourceUrl:'https://provost.uchicago.edu/cds' },
+  { school:'Brown', tier:'상1', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'I', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'I', character:'VI', firstGen:'I', alumni:'C', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'Brown은 특정 분야 깊이 있는 열정(Spike)을 중시. 수상 자체보다 수상으로 이어지는 스토리와 열정이 더 중요',
+    sourceUrl:'https://www.brown.edu/ir/cds' },
+  { school:'Dartmouth', tier:'상2', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'VI', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'I', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'C', alumni:'I', geo:'I', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'국가/국제 수상이 유효하지만 Dartmouth는 커뮤니티 기여·야외활동·리더십을 더 중시. 학문 수상+커뮤니티 활동 병행 권장',
+    sourceUrl:'https://ir.dartmouth.edu/cds' },
+  { school:'UPenn', tier:'상2', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'VI', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'C', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'학문·비즈니스·의학 관련 수상이 유효. Wharton 지원 시 비즈니스 경쟁대회(DECA·BPA) 수상도 강점',
+    sourceUrl:'https://ir.upenn.edu/cds' },
+  { school:'Cornell', tier:'상2', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'I', gpa:'VI', testScores:'I', essay:'VI', recs:'VI', interview:'C', extracurricular:'I', talent:'I', character:'VI', firstGen:'C', alumni:'NC', geo:'I', stateRes:'C', religion:'NC', race:'C', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'지원 칼리지별 관련 수상이 유효. Engineering은 STEM 올림피아드, CAS는 학문 수상, Hospitality는 외부 수상보다 경험이 더 중요',
+    sourceUrl:'https://irp.dpb.cornell.edu/cds' },
+  { school:'Johns Hopkins', tier:'상2', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'I', essay:'VI', recs:'VI', interview:'NC', extracurricular:'VI', talent:'I', character:'VI', firstGen:'I', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★★', awardsNote:'Regeneron·ISEF·Intel 수상이 매우 강력. JHU는 연구 대학이라 연구 관련 수상이 거의 결정적 차별화 요소로 작용',
+    sourceUrl:'https://oir.jhu.edu/cds' },
+  { school:'Duke', tier:'상2', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'VI', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'C', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'학문·운동·예술 등 다양한 수상 유효. Duke는 균형 잡힌 활동을 선호하므로 한 분야 수상보다 복합적 성취 선호',
+    sourceUrl:'https://ir.duke.edu/cds' },
+  { school:'Northwestern', tier:'하단1', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'I', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'C', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'C' },
+    awardsEmphasis:'★★', awardsNote:'지원 전공 관련 수상이 유효. Medill(저널리즘)은 언론상, Bienen(음악)은 콩쿠르 수상, STEM은 올림피아드 수상이 가장 효과적',
+    sourceUrl:'https://www.northwestern.edu/ir/cds' },
+  { school:'Vanderbilt', tier:'하단1', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'I', gpa:'VI', testScores:'I', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'C', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'C' },
+    awardsEmphasis:'★★', awardsNote:'학문 수상이 유효하지만 Vanderbilt는 활동·봉사·균형을 더 중시. National Merit Finalist 등 전국 단위 수상이 특히 장학금 연계에 도움',
+    sourceUrl:'https://ir.vanderbilt.edu/cds' },
+  { school:'Williams', tier:'하단1', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'I', gpa:'VI', testScores:'C', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'C', geo:'I', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'I', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'다방면 수상이 유효. Williams는 전인격적 평가라 STEM 올림피아드뿐 아니라 예술·문학·스포츠 수상도 고루 인정',
+    sourceUrl:'https://provost.williams.edu/cds' },
+  { school:'Amherst', tier:'하단1', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'I', gpa:'VI', testScores:'C', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'I', character:'VI', firstGen:'VI', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★', awardsNote:'수상 자체보다 에세이와 스토리가 더 중요. Amherst는 사회정의·다양성·인성을 최우선으로 보므로 수상이 보조 역할에 그침',
+    sourceUrl:'https://www.amherst.edu/aboutamherst/facts/cds' },
+  { school:'Pomona', tier:'하단1', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'I', gpa:'VI', testScores:'C', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★', awardsNote:'수상보다 활동의 깊이와 다양성이 더 중요. LAC 문화 특성상 교내 리더십·커뮤니티 기여가 수상보다 더 큰 비중',
+    sourceUrl:'https://www.pomona.edu/ir/cds' },
+  { school:'Rice', tier:'하단2', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'NC', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★★', awardsNote:'ISEF·USACO·올림피아드 등 STEM 수상이 매우 강력. Rice-Baylor BS-MD 지원 시 국내외 의학·과학 수상이 실질적 차별화 요소',
+    sourceUrl:'https://ir.rice.edu/cds' },
+  { school:'Swarthmore', tier:'하단2', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'I', gpa:'VI', testScores:'C', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'I', character:'VI', firstGen:'I', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'학문 수상이 유효하지만 Swarthmore는 사회정의·지적 깊이를 더 중시. 연구 성과·학술 출판이 단순 수상보다 더 강력',
+    sourceUrl:'https://www.swarthmore.edu/ir/cds' },
+  { school:'Bowdoin', tier:'하단2', year:'2023-24', satPolicy:'미반영',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'NC', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'I', alumni:'NC', geo:'I', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★', awardsNote:'Bowdoin은 SAT도 안 보는 학교. 수상보다 에세이·추천서·활동의 진정성이 압도적으로 중요. 수상이 있으면 플러스지만 결정적이지 않음',
+    sourceUrl:'https://www.bowdoin.edu/ir/cds' },
+  { school:'WashU in St. Louis', tier:'하단2', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'I', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'I', character:'VI', firstGen:'I', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'I', volunteer:'I', work:'C', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'의학·과학 관련 수상이 유효. WashU 의대 연계 Pre-Med 지원 시 연구대회·의학 관련 외부 수상이 실질적 도움',
+    sourceUrl:'https://ir.wustl.edu/cds' },
+  { school:'Carnegie Mellon', tier:'하단2', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'I', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'C', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'C', volunteer:'C', work:'C', interest:'C' },
+    awardsEmphasis:'★★★', awardsNote:'USACO·ICPC·해커톤·AI 경진대회 수상이 CS/Engineering 지원에 매우 강력. 포트폴리오+수상 병행이 이상적',
+    sourceUrl:'https://www.cmu.edu/ir/cds' },
+  { school:'Notre Dame', tier:'하단2', year:'2023-24', satPolicy:'필수',
+    factors:{ rigor:'VI', classRank:'VI', gpa:'VI', testScores:'VI', essay:'VI', recs:'VI', interview:'C', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'C', alumni:'I', geo:'C', stateRes:'NC', religion:'C', race:'C', volunteer:'VI', work:'C', interest:'NC' },
+    awardsEmphasis:'★', awardsNote:'Notre Dame은 봉사·인성·가톨릭 가치를 최우선. 학문 수상보다 커뮤니티 봉사·리더십 성과가 더 중요. 수상은 보조 요소',
+    sourceUrl:'https://ir.nd.edu/cds' },
+  { school:'Harvey Mudd', tier:'하단2', year:'2023-24', satPolicy:'선택',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'C', essay:'VI', recs:'VI', interview:'I', extracurricular:'VI', talent:'VI', character:'VI', firstGen:'C', alumni:'NC', geo:'C', stateRes:'NC', religion:'NC', race:'C', volunteer:'I', work:'C', interest:'I' },
+    awardsEmphasis:'★★★', awardsNote:'수학·물리·CS 경시대회 수상이 매우 강력. AMC/AIME, USACO, 물리올림피아드 등 경쟁 수상이 Harvey Mudd 지원에 결정적 차별화',
+    sourceUrl:'https://www.hmc.edu/ir/cds' },
+  { school:'UCLA', tier:'하단2', year:'2023-24', satPolicy:'미반영',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'NC', essay:'VI', recs:'C', interview:'NC', extracurricular:'VI', talent:'I', character:'I', firstGen:'I', alumni:'NC', geo:'VI', stateRes:'VI', religion:'NC', race:'NC', volunteer:'I', work:'I', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'UC 시스템은 수상이 PIQ(에세이) 안에 통합 서술. 국가/국제 수상을 에세이에서 스토리텔링으로 활용하는 것이 핵심',
+    sourceUrl:'https://ucla.edu/about/administration/ir/cds' },
+  { school:'UC Berkeley', tier:'하단2', year:'2023-24', satPolicy:'미반영',
+    factors:{ rigor:'VI', classRank:'C', gpa:'VI', testScores:'NC', essay:'VI', recs:'NC', interview:'NC', extracurricular:'VI', talent:'I', character:'I', firstGen:'I', alumni:'NC', geo:'VI', stateRes:'VI', religion:'NC', race:'NC', volunteer:'I', work:'I', interest:'NC' },
+    awardsEmphasis:'★★', awardsNote:'UC 시스템으로 수상을 PIQ에서 서술. 전공 관련 외부 수상(STEM·예술·사회활동)을 에세이에 잘 녹이는 것이 중요',
+    sourceUrl:'https://opa.berkeley.edu/cds' },
+];
+
+const cdsFactorLabels: { key: keyof CdsRow['factors']; label: string; labelKR: string }[] = [
+  { key:'rigor',          label:'Rigor of HS record',  labelKR:'고교 커리큘럼 난이도' },
+  { key:'classRank',      label:'Class rank',           labelKR:'학급 석차' },
+  { key:'gpa',            label:'Academic GPA',         labelKR:'내신 GPA' },
+  { key:'testScores',     label:'Standardized tests',   labelKR:'SAT/ACT' },
+  { key:'essay',          label:'Application essay',    labelKR:'에세이' },
+  { key:'recs',           label:'Recommendations',      labelKR:'추천서' },
+  { key:'interview',      label:'Interview',            labelKR:'인터뷰' },
+  { key:'extracurricular',label:'Extracurricular',       labelKR:'과외활동' },
+  { key:'talent',         label:'Talent/Ability',       labelKR:'특별한 재능' },
+  { key:'character',      label:'Character/Personal',   labelKR:'인격/품성' },
+  { key:'firstGen',       label:'First generation',     labelKR:'1세대 대학생' },
+  { key:'alumni',         label:'Alumni relation',      labelKR:'동문 자녀' },
+  { key:'geo',            label:'Geographical residence',labelKR:'지역 다양성' },
+  { key:'stateRes',       label:'State residency',      labelKR:'주 거주자 우대' },
+  { key:'religion',       label:'Religious affiliation',labelKR:'종교' },
+  { key:'race',           label:'Racial/ethnic status', labelKR:'인종/민족 다양성' },
+  { key:'volunteer',      label:'Volunteer work',       labelKR:'봉사활동' },
+  { key:'work',           label:'Work experience',      labelKR:'직업 경험' },
+  { key:'interest',       label:'Level of interest',    labelKR:'지원 관심도' },
+];
+
+// ────────────────────────────────────────────────
 //  메인 컴포넌트
 // ────────────────────────────────────────────────
 export default function USCollegeInfo() {
@@ -2990,10 +3858,10 @@ export default function USCollegeInfo() {
 
       {/* ── Tab Selector ── */}
       <div style={{ display:'flex', gap:'8px', marginBottom:'24px', background:'#F0EFFE', borderRadius:'12px', padding:'6px' }}>
-        {([['original','📋 원본 표 (수정 없음)'],['intl','🌏 국제학생 관점 분석']] as [Tab,string][]).map(([key, label]) => (
+        {([['original','📋 원본 표 (수정 없음)'],['intl','🌏 국제학생 관점 분석'],['cds','📊 CDS 원본 (C7)']] as [Tab,string][]).map(([key, label]) => (
           <button key={key} onClick={() => setTab(key as Tab)} style={{
             flex:1, padding:'10px 20px', borderRadius:'8px', border:'none', cursor:'pointer',
-            fontWeight:700, fontSize:'13.5px', transition:'all 0.2s',
+            fontWeight:700, fontSize:'13px', transition:'all 0.2s',
             background: tab === key ? '#FFFFFF' : 'transparent',
             color: tab === key ? '#4F46E5' : '#6B7280',
             boxShadow: tab === key ? '0 2px 8px rgba(79,70,229,0.15)' : 'none',
@@ -3180,6 +4048,266 @@ export default function USCollegeInfo() {
         </div>
       )}
 
+      {/* ── TAB 3: CDS 원본 ── */}
+      {tab === 'cds' && (
+        <div>
+          {/* 헤더 안내 */}
+          <div style={{ background:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', border:'1px solid #86EFAC', borderRadius:'12px', padding:'16px 20px', marginBottom:'20px' }}>
+            <div style={{ fontSize:'15px', fontWeight:800, color:'#14532D', marginBottom:'6px' }}>📊 Common Data Set (CDS) — Section C7</div>
+            <div style={{ fontSize:'12.5px', color:'#166534', lineHeight:1.7 }}>
+              CDS는 미국 대학들이 <b>매년 공개하는 공식 표준 데이터</b>입니다. Section C7은 <b>"Factors Used in Admission Decisions"</b>로,
+              사정관이 각 항목을 얼마나 중요하게 보는지를 4단계로 공식 공개합니다.<br/>
+              아래 표는 <b>2023-24년 CDS 기준</b>이며, 각 학교 공식 출처 링크를 함께 제공합니다.
+            </div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:'8px', marginTop:'12px' }}>
+              {[['VI','Very Important','#DC2626','#FEF2F2','#FCA5A5'],['I','Important','#D97706','#FEF9C3','#FDE68A'],['C','Considered','#2563EB','#EFF6FF','#BFDBFE'],['NC','Not Considered','#9CA3AF','#F3F4F6','#E5E7EB']].map(([code,label,tc,bg,border])=>(
+                <span key={code} style={{ display:'inline-flex', alignItems:'center', gap:'6px', background:bg, border:`1px solid ${border}`, borderRadius:'100px', padding:'3px 10px' }}>
+                  <b style={{ fontSize:'11px', color:tc }}>{code}</b>
+                  <span style={{ fontSize:'11px', color:'#374151' }}>{label}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* ── 수상이력 가이드 ── */}
+          <div style={{ marginBottom:'20px', border:'1px solid #FDE68A', borderRadius:'12px', overflow:'hidden' }}>
+            {/* 헤더 */}
+            <div style={{ background:'linear-gradient(135deg,#78350F,#92400E)', padding:'14px 20px', display:'flex', alignItems:'center', gap:'10px' }}>
+              <span style={{ fontSize:'20px' }}>🏆</span>
+              <div>
+                <div style={{ fontSize:'14px', fontWeight:800, color:'#FEF9C3' }}>수상이력 (Awards & Honors) — 실제로 얼마나 중요한가?</div>
+                <div style={{ fontSize:'11.5px', color:'#FDE68A', marginTop:'2px' }}>수상의 "레벨"에 따라 입시 효과가 완전히 달라집니다</div>
+              </div>
+            </div>
+
+            <div style={{ background:'#FFFBEB', padding:'20px' }}>
+              {/* 피라미드 레벨 */}
+              <div style={{ marginBottom:'20px' }}>
+                <div style={{ fontSize:'12px', fontWeight:800, color:'#78350F', marginBottom:'10px', letterSpacing:'0.5px', textTransform:'uppercase' }}>📐 수상 레벨 피라미드</div>
+                {[
+                  {
+                    level: 'Lv.5 국제 대회 수상',
+                    color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE',
+                    badge: '최강 차별화',
+                    badgeBg: '#7C3AED',
+                    examples: ['IMO (국제수학올림피아드) 수상', 'IPhO·IChO (국제물리·화학올림피아드)', 'Regeneron ISEF 1~3등', 'Google Code Jam 결선', 'ICPC 세계 결선'],
+                    effect: '★★★ — MIT·Caltech·Harvard 지원 시 사정관 눈에 즉시 "이 학생은 다르다" 신호. 합격에 결정적',
+                  },
+                  {
+                    level: 'Lv.4 전국 대회 상위 입상',
+                    color: '#DC2626', bg: '#FEF2F2', border: '#FCA5A5',
+                    badge: '강력한 강점',
+                    badgeBg: '#DC2626',
+                    examples: ['AMC 12 → AIME 고득점 (120점+)', 'USACO Gold/Platinum', 'National Merit Finalist', 'Intel STS / Regeneron STS 준결선 이상', 'AP Scholar with Distinction', 'Science Olympiad 전국 결선'],
+                    effect: '★★★ — 전국 수준임을 증명. Top 10-20위권 대학 지원 시 실질적 플러스 요소. 단독보다 에세이와 연계하면 훨씬 강력',
+                  },
+                  {
+                    level: 'Lv.3 주(State) / 지역 수준 수상',
+                    color: '#D97706', bg: '#FEF9C3', border: '#FDE68A',
+                    badge: '유효한 플러스',
+                    badgeBg: '#D97706',
+                    examples: ['주(State) 올림피아드 수상', 'Regional Science Fair 1위', 'DECA / FBLA State 수상', '콩쿠르 지역 1위 (음악·예술)', 'Speech & Debate 주 수준 입상'],
+                    effect: '★★ — 좋은 플러스 요소지만 Top 10교는 전국 이상을 기대. Vanderbilt·Emory·Georgetown 수준에서 실질적 강점',
+                  },
+                  {
+                    level: 'Lv.2 교외 / 학교 간 대회 수상',
+                    color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE',
+                    badge: '보조 역할',
+                    badgeBg: '#2563EB',
+                    examples: ['도시/카운티 수준 대회 수상', '학교 간 토론·에세이 대회 입상', '예술제 지역 수상', 'Scholastic Art & Writing Awards'],
+                    effect: '★ — 있으면 좋지만 최상위권 대학에서는 차별화 요소가 되기 어려움. 활동 포트폴리오의 보조 역할',
+                  },
+                  {
+                    level: 'Lv.1 교내 수상 (In-School)',
+                    color: '#6B7280', bg: '#F3F4F6', border: '#D1D5DB',
+                    badge: '거의 영향 없음',
+                    badgeBg: '#6B7280',
+                    examples: ['학교 내 최우수 학생상', '교내 에세이 대회 1위', 'Honor Roll / 학교 GPA 표창', '학교 내 음악·예술 공연상'],
+                    effect: '— — Top 30위권 대학에서는 사실상 영향 없음. GPA와 중복 의미. 서류에 포함하려면 다른 활동과 묶어서 맥락 제시 필요',
+                  },
+                ].map((row, i) => (
+                  <div key={i} style={{
+                    display:'flex', gap:'12px', padding:'12px 14px', marginBottom:'6px',
+                    background: row.bg, border: `1px solid ${row.border}`, borderRadius:'10px',
+                    alignItems:'flex-start',
+                  }}>
+                    {/* 레벨 배지 */}
+                    <div style={{ flexShrink:0, width:'130px' }}>
+                      <div style={{ fontSize:'11px', fontWeight:800, color: row.color, marginBottom:'4px' }}>{row.level}</div>
+                      <span style={{ fontSize:'10px', fontWeight:700, background: row.badgeBg, color:'#FFF', padding:'2px 8px', borderRadius:'100px' }}>{row.badge}</span>
+                    </div>
+                    {/* 예시 */}
+                    <div style={{ flex:1 }}>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:'4px', marginBottom:'5px' }}>
+                        {row.examples.map((ex,j) => (
+                          <span key={j} style={{ fontSize:'11px', background:'rgba(255,255,255,0.7)', border:`1px solid ${row.border}`, borderRadius:'6px', padding:'2px 8px', color: row.color, fontWeight:600 }}>{ex}</span>
+                        ))}
+                      </div>
+                      <div style={{ fontSize:'11.5px', color:'#374151', lineHeight:1.5 }}>{row.effect}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 꾸미 현실 가이드 */}
+              <div style={{ background:'linear-gradient(135deg,#FEF3C7,#FDE68A)', border:'2px solid #F59E0B', borderRadius:'10px', padding:'14px 16px' }}>
+                <div style={{ fontSize:'13px', fontWeight:800, color:'#78350F', marginBottom:'10px' }}>🎯 꾸미(파나마 국제학교 G11)에게 현실적인 수상 목표</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'8px', fontSize:'12px' }}>
+                  {[
+                    {
+                      icon: '🧪',
+                      title: 'Pre-Med·화학 특화',
+                      items: ['Regeneron STS 준결선 (고3)', 'Science Fair 지역→주 수준', 'AMC 12 → AIME 진출', '화학 올림피아드 학교 대표'],
+                      note: 'JHU·Rice·WashU·Emory에 직접 효과',
+                      color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE',
+                    },
+                    {
+                      icon: '💡',
+                      title: '현실적 단기 목표 (G11)',
+                      items: ['AMC 10/12 응시 → AIME 도전', 'AP Chemistry/Biology 5점', 'USABO (생물올림피아드) 응시', 'Science Olympiad 팀 참가'],
+                      note: 'G11에 지금 시작할 수 있는 것들',
+                      color: '#059669', bg: '#ECFDF5', border: '#6EE7B7',
+                    },
+                    {
+                      icon: '⭐',
+                      title: '파나마 희소성 활용',
+                      items: ['파나마·중미 지역 대회 수상', '라틴아메리카 과학 경진대회', '국제학교 대회 (PAUSD 등)', '한국 과학재단 해외 지원 프로그램'],
+                      note: '파나마 출신이라 경쟁자가 거의 없음',
+                      color: '#D97706', bg: '#FEF9C3', border: '#FDE68A',
+                    },
+                  ].map((box, i) => (
+                    <div key={i} style={{ background:'rgba(255,255,255,0.7)', border:`1px solid ${box.border}`, borderRadius:'8px', padding:'10px 12px' }}>
+                      <div style={{ fontSize:'16px', marginBottom:'4px' }}>{box.icon}</div>
+                      <div style={{ fontSize:'11.5px', fontWeight:800, color: box.color, marginBottom:'6px' }}>{box.title}</div>
+                      <div style={{ display:'flex', flexDirection:'column', gap:'2px', marginBottom:'6px' }}>
+                        {box.items.map((item,j) => (
+                          <div key={j} style={{ fontSize:'11px', color:'#374151' }}>• {item}</div>
+                        ))}
+                      </div>
+                      <div style={{ fontSize:'10.5px', color: box.color, fontWeight:700, background: box.bg, borderRadius:'4px', padding:'3px 6px' }}>{box.note}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop:'10px', fontSize:'11px', color:'#92400E', fontStyle:'italic' }}>
+                  ※ 수상 자체보다 "왜 이 수상을 했는가 + 그 이후 무엇을 배웠는가"를 에세이에서 연결하는 것이 훨씬 중요합니다.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 테이블 — 가로 스크롤 */}
+          <div style={{ background:'#FFFFFF', borderRadius:'12px', border:'1px solid #E5E7EB', overflow:'hidden' }}>
+            <div style={{ overflowX:'auto' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'11.5px' }}>
+                <thead>
+                  <tr style={{ background:'linear-gradient(135deg,#1E1B4B,#312E81)' }}>
+                    <th style={{ padding:'10px 12px', textAlign:'left', color:'#C7D2FE', fontWeight:700, whiteSpace:'nowrap', position:'sticky', left:0, background:'#1E1B4B', zIndex:1, minWidth:'130px' }}>대학</th>
+                    <th style={{ padding:'10px 8px', textAlign:'center', color:'#A5B4FC', fontWeight:600, whiteSpace:'nowrap', fontSize:'10px', minWidth:'44px' }}>티어</th>
+                    {cdsFactorLabels.map(f=>(
+                      <th key={f.key} style={{ padding:'6px 4px', textAlign:'center', color:'#C7D2FE', fontWeight:600, fontSize:'10px', minWidth:'44px', lineHeight:1.3, whiteSpace:'nowrap' }}>
+                        <div>{f.labelKR}</div>
+                        <div style={{ color:'#818CF8', fontSize:'9px', fontWeight:400 }}>{f.label.split(' ')[0]}</div>
+                      </th>
+                    ))}
+                    <th style={{ padding:'10px 8px', textAlign:'center', color:'#A5B4FC', fontWeight:600, fontSize:'10px', minWidth:'52px' }}>SAT 정책</th>
+                    <th style={{ padding:'10px 8px', textAlign:'center', color:'#FDE68A', fontWeight:700, fontSize:'10px', minWidth:'80px', borderLeft:'2px solid rgba(253,230,138,0.3)' }}>
+                      ★ 수상이력<br/>
+                      <span style={{ fontSize:'9px', fontWeight:400, color:'#A5B4FC' }}>(비공식 보조)</span>
+                    </th>
+                    <th style={{ padding:'10px 8px', textAlign:'center', color:'#A5B4FC', fontWeight:600, fontSize:'10px', minWidth:'52px' }}>출처</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cdsGroup1.map((row, ri) => {
+                    const tierColors: Record<string,{bg:string;text:string}> = {
+                      '최상1': {bg:'#F5F3FF', text:'#5B21B6'},
+                      '최상2': {bg:'#EEF2FF', text:'#3730A3'},
+                      '상1':   {bg:'#DBEAFE', text:'#1E40AF'},
+                      '상2':   {bg:'#E0F2FE', text:'#0369A1'},
+                      '하단1': {bg:'#ECFDF5', text:'#065F46'},
+                      '하단2': {bg:'#F0FDF4', text:'#14532D'},
+                    };
+                    const tc = tierColors[row.tier] || {bg:'#F9FAFB', text:'#374151'};
+                    const cellStyle = (rating: CdsRating) => {
+                      const map: Record<CdsRating,{bg:string;color:string;fw:number}> = {
+                        'VI': {bg:'#FEE2E2',  color:'#DC2626', fw:800},
+                        'I':  {bg:'#FEF9C3',  color:'#B45309', fw:700},
+                        'C':  {bg:'#DBEAFE',  color:'#1D4ED8', fw:600},
+                        'NC': {bg:'transparent', color:'#D1D5DB', fw:400},
+                      };
+                      return map[rating];
+                    };
+                    return (
+                      <tr key={ri} style={{ background: ri%2===0 ? '#FFFFFF' : '#FAFAF9', borderBottom:'1px solid #F3F4F6' }}
+                        onMouseEnter={e=>(e.currentTarget as HTMLTableRowElement).style.background='#F0EFFE'}
+                        onMouseLeave={e=>(e.currentTarget as HTMLTableRowElement).style.background=ri%2===0 ? '#FFFFFF' : '#FAFAF9'}
+                      >
+                        <td style={{ padding:'8px 12px', fontWeight:700, color:'#1E1B4B', position:'sticky', left:0, background:'inherit', zIndex:1, borderRight:'1px solid #E5E7EB', whiteSpace:'nowrap' }}>
+                          {row.school}
+                        </td>
+                        <td style={{ padding:'6px 4px', textAlign:'center' }}>
+                          <span style={{ fontSize:'10px', fontWeight:700, color:tc.text, background:tc.bg, padding:'2px 6px', borderRadius:'100px', whiteSpace:'nowrap' }}>{row.tier}</span>
+                        </td>
+                        {cdsFactorLabels.map(f => {
+                          const rating = row.factors[f.key];
+                          const s = cellStyle(rating);
+                          return (
+                            <td key={f.key} style={{ padding:'6px 4px', textAlign:'center' }}>
+                              <span style={{
+                                display:'inline-block', fontSize:'10px', fontWeight:s.fw,
+                                color: s.color, background: s.bg,
+                                borderRadius:'4px', padding:'2px 5px',
+                                minWidth:'28px', textAlign:'center',
+                              }}>{rating}</span>
+                            </td>
+                          );
+                        })}
+                        <td style={{ padding:'6px 8px', textAlign:'center' }}>
+                          <span style={{
+                            fontSize:'10px', fontWeight:700,
+                            color: row.satPolicy==='필수' ? '#DC2626' : row.satPolicy==='미반영' ? '#6B7280' : '#D97706',
+                            background: row.satPolicy==='필수' ? '#FEE2E2' : row.satPolicy==='미반영' ? '#F3F4F6' : '#FEF9C3',
+                            padding:'2px 6px', borderRadius:'100px',
+                          }}>{row.satPolicy}</span>
+                        </td>
+                        <td style={{ padding:'6px 8px', textAlign:'center', borderLeft:'2px solid #FEF9C3' }}>
+                          <div style={{ position:'relative', display:'inline-block' }}>
+                            <span
+                              title={row.awardsNote}
+                              style={{
+                                fontSize:'13px', fontWeight:800, cursor:'help',
+                                color: row.awardsEmphasis==='★★★' ? '#B45309'
+                                     : row.awardsEmphasis==='★★' ? '#6B7280'
+                                     : row.awardsEmphasis==='★' ? '#9CA3AF' : '#D1D5DB',
+                              }}
+                            >{row.awardsEmphasis}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding:'6px 8px', textAlign:'center' }}>
+                          <a href={row.sourceUrl} target="_blank" rel="noreferrer"
+                            style={{ fontSize:'10px', color:'#4F46E5', fontWeight:600, textDecoration:'none' }}
+                          >CDS↗</a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* 주석 */}
+          <div style={{ marginTop:'16px', background:'#F9FAFB', border:'1px solid #E5E7EB', borderRadius:'10px', padding:'14px 16px', fontSize:'11.5px', color:'#6B7280', lineHeight:1.7 }}>
+            <b style={{ color:'#374151' }}>📌 출처 및 주의사항</b><br/>
+            · 위 데이터는 각 대학이 공식 공개한 <b>2023-2024 Common Data Set</b> Section C7 기준입니다.<br/>
+            · VI = Very Important / I = Important / C = Considered / NC = Not Considered<br/>
+            · CDS 링크(↗)는 각 대학 IR(Institutional Research) 공식 페이지로 연결됩니다. 연도별 CDS PDF에서 정확한 수치를 확인하세요.<br/>
+            · 실제 입시에서 각 요소의 상대적 가중치는 공개되지 않으며, 사정관 재량에 따라 적용됩니다.<br/>
+            · <b style={{ color:'#B45309' }}>★ 수상이력 콼럼</b>은 CDS 공식 항목이 <b>아닙니다</b> — 입시 커다이즘/컨설팅 경험치 기반 비공식 보조 지표. ★★★ = 수상 매우 강력, ★★ = 유효, ★ = 보조 역할. <b>수상 셀에 마우스를 올리면 상세 설명이 표시</b>됩니다.
+          </div>
+        </div>
+      )}
+
       {/* ── 모달: 학교 상세 정보 ── */}
       {selectedKey && (
         <div
@@ -3355,6 +4483,40 @@ export default function USCollegeInfo() {
                         {selectedSchool.panamaNote}
                       </div>
                       <div style={{ marginTop:'6px', fontSize:'11px', color:'#6B7280', fontStyle:'italic', padding:'0 2px' }}>※ 국적(여권) = 한국 → 재정지원 CSS Profile 한국 기준 적용 / 학교 소재지 = 파나마 → 라틴아메리카 지역 사정관 평가</div>
+                    </Section>
+
+                    {/* 사정관 평가 기준 */}
+                    <Section title="🎓 사정관이 중점적으로 보는 것">
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {selectedSchool.evalCriteria.map((c, i) => {
+                          const weightConfig = {
+                            '핵심': { bg: '#FEF2F2', border: '#FCA5A5', badgeBg: '#DC2626', text: '#991B1B' },
+                            '높음': { bg: '#FEF3C7', border: '#FCD34D', badgeBg: '#D97706', text: '#92400E' },
+                            '중간': { bg: '#EFF6FF', border: '#BFDBFE', badgeBg: '#2563EB', text: '#1E40AF' },
+                            '참고': { bg: '#F3F4F6', border: '#D1D5DB', badgeBg: '#6B7280', text: '#4B5563' },
+                          }[c.weight];
+                          return (
+                            <div key={i} style={{
+                              display: 'flex', alignItems: 'flex-start', gap: '10px',
+                              background: weightConfig.bg, border: `1px solid ${weightConfig.border}`,
+                              borderRadius: '8px', padding: '9px 12px',
+                            }}>
+                              <span style={{
+                                fontSize: '10px', fontWeight: 800, whiteSpace: 'nowrap',
+                                background: weightConfig.badgeBg, color: '#FFF',
+                                padding: '2px 8px', borderRadius: '100px', marginTop: '1px', flexShrink: 0,
+                              }}>{c.weight}</span>
+                              <div>
+                                <div style={{ fontSize: '12.5px', fontWeight: 700, color: weightConfig.text, marginBottom: '2px' }}>{c.label}</div>
+                                <div style={{ fontSize: '11.5px', color: '#374151', lineHeight: 1.5 }}>{c.note}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ marginTop: '8px', fontSize: '11px', color: '#9CA3AF', fontStyle: 'italic' }}>
+                        ※ Common App 기반 일반적 평가 가중치 — 실제 비율은 학교별·연도별 상이
+                      </div>
                     </Section>
 
                     {/* 화학 섹션 */}
