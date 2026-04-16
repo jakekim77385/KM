@@ -12,14 +12,16 @@ import EssayManager from '@/components/EssayManager';
 import ApplicationTracker from '@/components/ApplicationTracker';
 import Financial from '@/components/Financial';
 import ActivityPortfolio from '@/components/ActivityPortfolio';
+import DadPick from '@/components/DadPick';
 
-type PageKey = 'dashboard' | 'profile' | 'activities' | 'usinfo' | 'colleges' | 'korean' | 'timeline' | 'essays' | 'tracker' | 'financial';
+type PageKey = 'dashboard' | 'profile' | 'activities' | 'usinfo' | 'dadpick' | 'colleges' | 'korean' | 'timeline' | 'essays' | 'tracker' | 'financial';
 
 const navItems = [
   { key: 'dashboard' as PageKey, icon: '🏠', label: '홈 대시보드', section: 'MAIN' },
   { key: 'profile' as PageKey, icon: '👩‍🎓', label: '내 프로필', section: 'ACADEMICS' },
   { key: 'activities' as PageKey, icon: '🌟', label: '활동 포트폴리오', section: 'ACADEMICS' },
   { key: 'usinfo' as PageKey, icon: '🔍', label: '대학 정보 센터', section: 'US_INFO' },
+  { key: 'dadpick' as PageKey, icon: '👨', label: '아빠 검토중', section: 'US_INFO' },
   { key: 'colleges' as PageKey, icon: '🏛️', label: '미국 대학 리스트', section: 'US_INFO' },
   { key: 'timeline' as PageKey, icon: '📅', label: '타임라인', section: 'PLANNING' },
   { key: 'essays' as PageKey, icon: '✍️', label: '에세이 매니저', section: 'PLANNING' },
@@ -42,6 +44,7 @@ const pageTitles: Record<PageKey, { title: string; subtitle: string }> = {
   dashboard: { title: '🏠 대시보드', subtitle: '꾸미의 대학 진학 여정 한눈에 보기' },
   profile:   { title: '👩‍🎓 내 프로필', subtitle: 'Kim Jiyun · Balboa Academy · 11th Grade' },
   usinfo:    { title: '🔍 미국 대학 정보 센터', subtitle: '합격률 · 학비 · BS-MD 트랙 등 심층 분석' },
+  dadpick:   { title: '👨 아빠 검토중', subtitle: '아빠가 검토 중인 대학 리스트' },
   colleges:  { title: '🏛️ 미국 대학 리스트', subtitle: 'BS/MD 직행 + STEM Pre-Med 관심 대학' },
   activities: { title: '🌟 활동 포트폴리오', subtitle: 'Heartitude 프로젝트 · 학문 대회 · Pre-Med 경험 관리' },
   korean:    { title: '🇰🇷 한국 특례 입시', subtitle: '재외국민 특별전형 3년 특례 — 의대 / 이공계' },
@@ -81,6 +84,7 @@ export default function Home() {
       case 'profile':   return <Profile />;
       case 'activities': return <ActivityPortfolio />;
       case 'usinfo':    return <USCollegeInfo />;
+      case 'dadpick':   return <DadPick />;
       case 'colleges':  return <CollegeList />;
       case 'korean':    return <KoreanColleges />;
       case 'timeline':  return <Timeline />;
